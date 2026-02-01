@@ -44,6 +44,7 @@ export async function POST(request: Request) {
 
         const { data, error } = await supabase
             .from('ruangan')
+            // @ts-ignore
             .insert({ nama, lokasi, deskripsi })
             .select()
             .single();

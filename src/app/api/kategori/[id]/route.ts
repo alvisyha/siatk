@@ -46,6 +46,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
 
         const { data, error } = await supabase
             .from('kategori')
+            // @ts-ignore
             .update(body)
             .eq('id', id)
             .select()

@@ -37,7 +37,7 @@ export async function getCurrentUser(): Promise<Omit<User, 'password'> | null> {
 
   // Query user from Supabase
   const { data: user, error } = await supabase
-    .from('user')
+    .from('users')
     .select('id, email, name, role, avatar, created_at, updated_at')
     .eq('id', verified.userId)
     .single();
@@ -50,7 +50,7 @@ export async function getCurrentUser(): Promise<Omit<User, 'password'> | null> {
 // Validate user login credentials against Supabase
 export async function validateUserCredentials(email: string, password: string): Promise<User | null> {
   const { data: user, error } = await supabase
-    .from('user')
+    .from('users')
     .select('*')
     .eq('email', email)
     .eq('password', password) // Note: In production, use proper password hashing

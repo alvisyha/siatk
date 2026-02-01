@@ -29,6 +29,7 @@ interface StatCard {
     changeType: 'positive' | 'negative';
     icon: React.ComponentType<{ className?: string }>;
     color: string;
+    bgColor: string;
 }
 
 const stats: StatCard[] = [
@@ -38,7 +39,8 @@ const stats: StatCard[] = [
         change: '+12.5%',
         changeType: 'positive',
         icon: DollarSign,
-        color: 'from-green-500 to-emerald-500'
+        color: 'text-emerald-600',
+        bgColor: 'bg-emerald-50'
     },
     {
         title: 'Active Users',
@@ -46,7 +48,8 @@ const stats: StatCard[] = [
         change: '+8.2%',
         changeType: 'positive',
         icon: Users,
-        color: 'from-blue-500 to-cyan-500'
+        color: 'text-blue-600',
+        bgColor: 'bg-blue-50'
     },
     {
         title: 'Conversion Rate',
@@ -54,7 +57,8 @@ const stats: StatCard[] = [
         change: '-2.1%',
         changeType: 'negative',
         icon: TrendingUp,
-        color: 'from-purple-500 to-pink-500'
+        color: 'text-purple-600',
+        bgColor: 'bg-purple-50'
     },
     {
         title: 'Active Sessions',
@@ -62,7 +66,8 @@ const stats: StatCard[] = [
         change: '+15.3%',
         changeType: 'positive',
         icon: Activity,
-        color: 'from-orange-500 to-yellow-500'
+        color: 'text-orange-600',
+        bgColor: 'bg-orange-50'
     }
 ];
 
@@ -77,8 +82,10 @@ const recentActivities = [
 export default function DashboardPage() {
     const [user, setUser] = useState<User | null>(null);
     const [currentTime, setCurrentTime] = useState(new Date());
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
+        setMounted(true);
         fetchUser();
         const timer = setInterval(() => setCurrentTime(new Date()), 1000);
         return () => clearInterval(timer);
@@ -99,13 +106,13 @@ export default function DashboardPage() {
     const getStatusIcon = (status: string) => {
         switch (status) {
             case 'success':
-                return <CheckCircle2 className="w-5 h-5 text-green-400" />;
+                return <CheckCircle2 className="w-5 h-5 text-green-500" />;
             case 'warning':
-                return <AlertCircle className="w-5 h-5 text-yellow-400" />;
+                return <AlertCircle className="w-5 h-5 text-amber-500" />;
             case 'error':
-                return <AlertCircle className="w-5 h-5 text-red-400" />;
+                return <AlertCircle className="w-5 h-5 text-red-500" />;
             default:
-                return <Clock className="w-5 h-5 text-blue-400" />;
+                return <Clock className="w-5 h-5 text-blue-500" />;
         }
     };
 
@@ -114,17 +121,17 @@ export default function DashboardPage() {
             {/* Welcome Section */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-white">
-                        Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">{user?.name || 'User'}</span>! 👋
+                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+                        Welcome back, <span className="text-blue-600">{user?.name || 'User'}</span>! 👋
                     </h1>
-                    <p className="text-gray-400 mt-1">
+                    <p className="text-gray-500 mt-1">
                         Here's what's happening with your dashboard today.
                     </p>
                 </div>
-                <div className="flex items-center gap-3 px-4 py-3 bg-white/5 rounded-xl border border-white/10">
-                    <Clock className="w-5 h-5 text-purple-400" />
-                    <span className="text-white font-medium">
-                        {currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                <div className="flex items-center gap-3 px-4 py-2 bg-white rounded-lg border border-gray-200 shadow-sm text-sm">
+                    <Clock className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-700 font-medium min-w-[80px] text-center">
+                        {mounted ? currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '--:--:--'}
                     </span>
                 </div>
             </div>
@@ -134,29 +141,24 @@ export default function DashboardPage() {
                 {stats.map((stat, index) => (
                     <div
                         key={index}
-                        className="group relative bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-white/10 p-6 hover:border-white/20 transition-all duration-300"
+                        className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-all duration-300"
                     >
-                        {/* Gradient Glow */}
-                        <div className={`absolute inset-0 rounded-2xl bg-gradient-to-r ${stat.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
-
-                        <div className="relative">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className={`p-3 rounded-xl bg-gradient-to-r ${stat.color}`}>
-                                    <stat.icon className="w-6 h-6 text-white" />
-                                </div>
-                                <div className={`flex items-center gap-1 text-sm font-medium ${stat.changeType === 'positive' ? 'text-green-400' : 'text-red-400'
-                                    }`}>
-                                    {stat.changeType === 'positive' ? (
-                                        <ArrowUpRight className="w-4 h-4" />
-                                    ) : (
-                                        <ArrowDownRight className="w-4 h-4" />
-                                    )}
-                                    {stat.change}
-                                </div>
+                        <div className="flex items-center justify-between mb-4">
+                            <div className={`p-3 rounded-lg ${stat.bgColor}`}>
+                                <stat.icon className={`w-6 h-6 ${stat.color}`} />
                             </div>
-                            <h3 className="text-gray-400 text-sm font-medium mb-1">{stat.title}</h3>
-                            <p className="text-2xl font-bold text-white">{stat.value}</p>
+                            <div className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full ${stat.changeType === 'positive' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                                }`}>
+                                {stat.changeType === 'positive' ? (
+                                    <ArrowUpRight className="w-3 h-3" />
+                                ) : (
+                                    <ArrowDownRight className="w-3 h-3" />
+                                )}
+                                {stat.change}
+                            </div>
                         </div>
+                        <h3 className="text-gray-500 text-sm font-medium mb-1">{stat.title}</h3>
+                        <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
                     </div>
                 ))}
             </div>
@@ -164,10 +166,10 @@ export default function DashboardPage() {
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Recent Activity */}
-                <div className="lg:col-span-2 bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-white/10 p-6">
+                <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 shadow-sm p-6">
                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl font-bold text-white">Recent Activity</h2>
-                        <button className="p-2 hover:bg-white/5 rounded-lg transition-colors">
+                        <h2 className="text-lg font-bold text-gray-900">Recent Activity</h2>
+                        <button className="p-2 hover:bg-gray-50 rounded-lg transition-colors">
                             <MoreHorizontal className="w-5 h-5 text-gray-400" />
                         </button>
                     </div>
@@ -176,15 +178,17 @@ export default function DashboardPage() {
                         {recentActivities.map((activity) => (
                             <div
                                 key={activity.id}
-                                className="flex items-center gap-4 p-4 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"
+                                className="flex items-start gap-4 p-4 rounded-lg hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100"
                             >
-                                {getStatusIcon(activity.status)}
+                                <div className="mt-0.5">
+                                    {getStatusIcon(activity.status)}
+                                </div>
                                 <div className="flex-1">
-                                    <p className="text-white">
-                                        <span className="font-medium">{activity.user}</span>{' '}
-                                        <span className="text-gray-400">{activity.action}</span>
+                                    <p className="text-gray-900 text-sm">
+                                        <span className="font-semibold">{activity.user}</span>{' '}
+                                        <span className="text-gray-600">{activity.action}</span>
                                     </p>
-                                    <p className="text-sm text-gray-500">{activity.time}</p>
+                                    <p className="text-xs text-gray-400 mt-1">{activity.time}</p>
                                 </div>
                             </div>
                         ))}
@@ -192,54 +196,54 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Quick Stats */}
-                <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-white/10 p-6">
-                    <h2 className="text-xl font-bold text-white mb-6">Quick Stats</h2>
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+                    <h2 className="text-lg font-bold text-gray-900 mb-6">Quick Stats</h2>
 
                     <div className="space-y-6">
                         {/* Progress Item */}
                         <div>
                             <div className="flex items-center justify-between mb-2">
-                                <span className="text-gray-400">Monthly Goal</span>
-                                <span className="text-white font-medium">78%</span>
+                                <span className="text-sm text-gray-600">Monthly Goal</span>
+                                <span className="text-sm font-medium text-gray-900">78%</span>
                             </div>
-                            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                                <div className="h-full w-[78%] bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full" />
-                            </div>
-                        </div>
-
-                        <div>
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-gray-400">User Satisfaction</span>
-                                <span className="text-white font-medium">92%</span>
-                            </div>
-                            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                                <div className="h-full w-[92%] bg-gradient-to-r from-green-500 to-emerald-500 rounded-full" />
+                            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                <div className="h-full w-[78%] bg-blue-500 rounded-full" />
                             </div>
                         </div>
 
                         <div>
                             <div className="flex items-center justify-between mb-2">
-                                <span className="text-gray-400">Task Completion</span>
-                                <span className="text-white font-medium">64%</span>
+                                <span className="text-sm text-gray-600">User Satisfaction</span>
+                                <span className="text-sm font-medium text-gray-900">92%</span>
                             </div>
-                            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                                <div className="h-full w-[64%] bg-gradient-to-r from-orange-500 to-yellow-500 rounded-full" />
+                            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                <div className="h-full w-[92%] bg-green-500 rounded-full" />
+                            </div>
+                        </div>
+
+                        <div>
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-sm text-gray-600">Task Completion</span>
+                                <span className="text-sm font-medium text-gray-900">64%</span>
+                            </div>
+                            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                <div className="h-full w-[64%] bg-orange-500 rounded-full" />
                             </div>
                         </div>
 
                         {/* Info Cards */}
-                        <div className="pt-4 border-t border-white/10 space-y-3">
-                            <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
-                                <span className="text-gray-400">Total Orders</span>
-                                <span className="text-white font-bold">1,234</span>
+                        <div className="pt-6 border-t border-gray-100 space-y-3">
+                            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
+                                <span className="text-sm text-gray-600">Total Orders</span>
+                                <span className="text-sm font-bold text-gray-900">1,234</span>
                             </div>
-                            <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
-                                <span className="text-gray-400">Pending Tasks</span>
-                                <span className="text-white font-bold">23</span>
+                            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
+                                <span className="text-sm text-gray-600">Pending Tasks</span>
+                                <span className="text-sm font-bold text-gray-900">23</span>
                             </div>
-                            <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
-                                <span className="text-gray-400">Active Projects</span>
-                                <span className="text-white font-bold">8</span>
+                            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
+                                <span className="text-sm text-gray-600">Active Projects</span>
+                                <span className="text-sm font-bold text-gray-900">8</span>
                             </div>
                         </div>
                     </div>

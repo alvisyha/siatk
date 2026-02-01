@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { getCurrentUser } from '@/lib/auth';
 
-// GET: List all barang
+// GET: List all users
 export async function GET() {
     try {
         const user = await getCurrentUser();
@@ -11,17 +11,13 @@ export async function GET() {
         }
 
         const { data, error } = await supabase
-            .from('barang')
-            .select(`
-                *,
-                kategori:kategori_id (id, nama),
-                ruangan:ruangan_id (id, nama)
-            `)
+            .from('users')
+            .select('*')
             .order('created_at', { ascending: false });
 
         if (error) {
-            console.error('Error fetching barang:', error);
-            return NextResponse.json({ error: 'Gagal mengambil data barang' }, { status: 500 });
+            console.error('Error fetching users:', error);
+            return NextResponse.json({ error: 'Gagal mengambil data user' }, { status: 500 });
         }
 
         return NextResponse.json({ data });
@@ -31,44 +27,43 @@ export async function GET() {
     }
 }
 
-// POST: Create new barang
+// POST: Create new user
 export async function POST(request: Request) {
     try {
-        const user = await getCurrentUser();
-        if (!user) {
+        const currentUser = await getCurrentUser();
+        if (!currentUser) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const body = await request.json();
-        const { nama, deskripsi, kategori_id, ruangan_id, jumlah, kondisi } = body;
+        const { email, password, name, role, avatar } = body;
 
-        if (!nama || !kategori_id || !ruangan_id) {
+        if (!email || !password || !name || !role) {
             return NextResponse.json(
-                { error: 'Nama, kategori, dan ruangan harus diisi' },
+                { error: 'Email, password, nama, dan role harus diisi' },
                 { status: 400 }
             );
         }
 
         const { data, error } = await supabase
-            .from('barang')
+            .from('users')
             // @ts-ignore
             .insert({
-                nama,
-                deskripsi,
-                kategori_id,
-                ruangan_id,
-                jumlah: jumlah || 1,
-                kondisi: kondisi || 'baik'
+                email,
+                password, // Note: In a real app, hash this!
+                name,
+                role,
+                avatar: avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`
             })
             .select()
             .single();
 
         if (error) {
-            console.error('Error creating barang:', error);
-            return NextResponse.json({ error: 'Gagal menambah barang' }, { status: 500 });
+            console.error('Error creating user:', error);
+            return NextResponse.json({ error: 'Gagal menambah user' }, { status: 500 });
         }
 
-        return NextResponse.json({ message: 'Barang berhasil ditambahkan', data }, { status: 201 });
+        return NextResponse.json({ message: 'User berhasil ditambahkan', data }, { status: 201 });
     } catch (error) {
         console.error('Error:', error);
         return NextResponse.json({ error: 'Terjadi kesalahan server' }, { status: 500 });

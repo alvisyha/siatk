@@ -12,7 +12,9 @@ import {
     X,
     Bell,
     Search,
-    ChevronDown
+    ChevronDown,
+    Box,
+    DoorOpen
 } from 'lucide-react';
 
 interface User {
@@ -25,6 +27,8 @@ interface User {
 
 const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
+    { icon: Box, label: 'Barang', href: '/dashboard/barang' },
+    { icon: DoorOpen, label: 'Ruangan', href: '/dashboard/ruangan' },
     { icon: Users, label: 'Users', href: '/dashboard/users' },
     { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
 ];
@@ -67,64 +71,64 @@ export default function DashboardLayout({
     };
 
     return (
-        <div className="min-h-screen bg-slate-900">
+        <div className="min-h-screen bg-gray-50">
             {/* Mobile Sidebar Backdrop */}
             {sidebarOpen && (
                 <div
-                    className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
+                    className="fixed inset-0 z-40 bg-gray-900/50 backdrop-blur-sm lg:hidden"
                     onClick={() => setSidebarOpen(false)}
                 />
             )}
 
             {/* Sidebar */}
             <aside
-                className={`fixed top-0 left-0 z-50 h-full w-72 bg-slate-800/50 backdrop-blur-xl border-r border-white/10 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+                className={`fixed top-0 left-0 z-50 h-full w-72 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                     }`}
             >
                 {/* Sidebar Header */}
-                <div className="flex items-center justify-between h-16 px-6 border-b border-white/10">
+                <div className="flex items-center justify-between h-16 px-6 border-b border-gray-100">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center">
-                            <LayoutDashboard className="w-5 h-5 text-white" />
+                        <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
+                            <LayoutDashboard className="w-4 h-4 text-white" />
                         </div>
-                        <span className="text-xl font-bold text-white">Dashboard</span>
+                        <span className="text-lg font-bold text-gray-900">Dashboard</span>
                     </div>
                     <button
                         onClick={() => setSidebarOpen(false)}
-                        className="lg:hidden text-gray-400 hover:text-white"
+                        className="lg:hidden text-gray-400 hover:text-gray-600"
                     >
                         <X className="w-6 h-6" />
                     </button>
                 </div>
 
                 {/* Navigation */}
-                <nav className="p-4 space-y-2">
+                <nav className="p-4 space-y-1">
                     {menuItems.map((item) => {
                         const isActive = pathname === item.href;
                         return (
                             <Link
                                 key={item.href}
                                 href={item.href}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive
-                                        ? 'bg-gradient-to-r from-purple-500/20 to-cyan-500/20 text-white border border-purple-500/30'
-                                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 group ${isActive
+                                    ? 'bg-blue-50 text-blue-600 font-medium'
+                                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                                     }`}
                             >
-                                <item.icon className={`w-5 h-5 ${isActive ? 'text-purple-400' : 'group-hover:text-purple-400'}`} />
-                                <span className="font-medium">{item.label}</span>
+                                <item.icon className={`w-5 h-5 ${isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'}`} />
+                                <span className={isActive ? 'font-medium' : ''}>{item.label}</span>
                             </Link>
                         );
                     })}
                 </nav>
 
                 {/* Sidebar Footer */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10">
+                <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100">
                     <button
                         onClick={handleLogout}
-                        className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200"
+                        className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-gray-600 hover:text-red-600 hover:bg-red-50 transition-all duration-200"
                     >
                         <LogOut className="w-5 h-5" />
-                        <span className="font-medium">Logout</span>
+                        <span>Logout</span>
                     </button>
                 </div>
             </aside>
@@ -132,24 +136,24 @@ export default function DashboardLayout({
             {/* Main Content */}
             <div className="lg:ml-72">
                 {/* Header */}
-                <header className="sticky top-0 z-30 h-16 bg-slate-900/80 backdrop-blur-xl border-b border-white/10">
+                <header className="sticky top-0 z-30 h-16 bg-white/80 backdrop-blur-md border-b border-gray-200">
                     <div className="flex items-center justify-between h-full px-4 lg:px-8">
                         {/* Left Side */}
                         <div className="flex items-center gap-4">
                             <button
                                 onClick={() => setSidebarOpen(true)}
-                                className="lg:hidden text-gray-400 hover:text-white"
+                                className="lg:hidden text-gray-500 hover:text-gray-700"
                             >
                                 <Menu className="w-6 h-6" />
                             </button>
 
                             {/* Search */}
-                            <div className="hidden md:flex items-center gap-3 px-4 py-2 bg-white/5 rounded-xl border border-white/10">
+                            <div className="hidden md:flex items-center gap-3 px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
                                 <Search className="w-5 h-5 text-gray-400" />
                                 <input
                                     type="text"
                                     placeholder="Search..."
-                                    className="bg-transparent border-none outline-none text-white placeholder-gray-500 w-64"
+                                    className="bg-transparent border-none outline-none text-gray-900 placeholder-gray-400 w-64 text-sm"
                                 />
                             </div>
                         </div>
@@ -157,39 +161,43 @@ export default function DashboardLayout({
                         {/* Right Side */}
                         <div className="flex items-center gap-4">
                             {/* Notifications */}
-                            <button className="relative p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors">
-                                <Bell className="w-6 h-6" />
-                                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                            <button className="relative p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                                <Bell className="w-5 h-5" />
+                                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white" />
                             </button>
 
                             {/* User Menu */}
                             <div className="relative">
                                 <button
                                     onClick={() => setUserMenuOpen(!userMenuOpen)}
-                                    className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/5 transition-colors"
+                                    className="flex items-center gap-3 pl-3 pr-2 py-1.5 rounded-lg hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200"
                                 >
-                                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center text-white font-semibold text-sm">
-                                        {user?.avatar || 'U'}
+                                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm">
+                                        {user?.avatar || (user?.name ? user.name.charAt(0).toUpperCase() : 'U')}
                                     </div>
                                     <div className="hidden md:block text-left">
-                                        <p className="text-sm font-medium text-white">{user?.name || 'User'}</p>
-                                        <p className="text-xs text-gray-400">{user?.role || 'Role'}</p>
+                                        <p className="text-sm font-medium text-gray-900">{user?.name || 'User'}</p>
+                                        <p className="text-xs text-gray-500">{user?.role || 'Role'}</p>
                                     </div>
                                     <ChevronDown className="w-4 h-4 text-gray-400" />
                                 </button>
 
                                 {userMenuOpen && (
-                                    <div className="absolute right-0 mt-2 w-48 bg-slate-800 rounded-xl border border-white/10 shadow-xl py-2">
+                                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl border border-gray-100 shadow-lg py-1">
+                                        <div className="px-4 py-2 border-b border-gray-50 md:hidden">
+                                            <p className="text-sm font-medium text-gray-900">{user?.name}</p>
+                                            <p className="text-xs text-gray-500">{user?.email}</p>
+                                        </div>
                                         <Link
                                             href="/dashboard/settings"
-                                            className="block px-4 py-2 text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+                                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                                         >
                                             Settings
                                         </Link>
-                                        <hr className="my-2 border-white/10" />
+                                        <div className="border-t border-gray-100 my-1"></div>
                                         <button
                                             onClick={handleLogout}
-                                            className="block w-full text-left px-4 py-2 text-red-400 hover:bg-red-500/10 transition-colors"
+                                            className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
                                         >
                                             Logout
                                         </button>
