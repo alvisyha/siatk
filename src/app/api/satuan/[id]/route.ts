@@ -6,7 +6,7 @@ interface RouteParams {
     params: Promise<{ id: string }>;
 }
 
-// GET: Get single ruangan by ID
+// GET: Get single satuan by ID
 export async function GET(request: Request, { params }: RouteParams) {
     try {
         const user = await getCurrentUser();
@@ -17,13 +17,13 @@ export async function GET(request: Request, { params }: RouteParams) {
         const { id } = await params;
 
         const { data, error } = await supabase
-            .from('ruangan')
+            .from('satuan')
             .select('*')
             .eq('id', id)
             .single();
 
         if (error) {
-            return NextResponse.json({ error: 'Ruangan tidak ditemukan' }, { status: 404 });
+            return NextResponse.json({ error: 'Satuan tidak ditemukan' }, { status: 404 });
         }
 
         return NextResponse.json({ data });
@@ -33,7 +33,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     }
 }
 
-// PUT: Update ruangan
+// PUT: Update satuan
 export async function PUT(request: Request, { params }: RouteParams) {
     try {
         const user = await getCurrentUser();
@@ -45,7 +45,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
         const body = await request.json();
 
         const { data, error } = await supabase
-            .from('ruangan')
+            .from('satuan')
             // @ts-ignore
             .update(body)
             .eq('id', id)
@@ -53,18 +53,18 @@ export async function PUT(request: Request, { params }: RouteParams) {
             .single();
 
         if (error) {
-            console.error('Error updating ruangan:', error);
-            return NextResponse.json({ error: 'Gagal mengupdate ruangan' }, { status: 500 });
+            console.error('Error updating satuan:', error);
+            return NextResponse.json({ error: 'Gagal mengupdate satuan' }, { status: 500 });
         }
 
-        return NextResponse.json({ message: 'Ruangan berhasil diupdate', data });
+        return NextResponse.json({ message: 'Satuan berhasil diupdate', data });
     } catch (error) {
         console.error('Error:', error);
         return NextResponse.json({ error: 'Terjadi kesalahan server' }, { status: 500 });
     }
 }
 
-// DELETE: Delete ruangan
+// DELETE: Delete satuan
 export async function DELETE(request: Request, { params }: RouteParams) {
     try {
         const user = await getCurrentUser();
@@ -75,16 +75,16 @@ export async function DELETE(request: Request, { params }: RouteParams) {
         const { id } = await params;
 
         const { error } = await supabase
-            .from('ruangan')
+            .from('satuan')
             .delete()
             .eq('id', id);
 
         if (error) {
-            console.error('Error deleting ruangan:', error);
-            return NextResponse.json({ error: 'Gagal menghapus ruangan' }, { status: 500 });
+            console.error('Error deleting satuan:', error);
+            return NextResponse.json({ error: 'Gagal menghapus satuan' }, { status: 500 });
         }
 
-        return NextResponse.json({ message: 'Ruangan berhasil dihapus' });
+        return NextResponse.json({ message: 'Satuan berhasil dihapus' });
     } catch (error) {
         console.error('Error:', error);
         return NextResponse.json({ error: 'Terjadi kesalahan server' }, { status: 500 });

@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { getCurrentUser } from '@/lib/auth';
 
-// GET: List all barang
+export const dynamic = 'force-dynamic';
+
+// GET: List all sub-bagian
 export async function GET() {
     try {
         const user = await getCurrentUser();
@@ -11,13 +13,18 @@ export async function GET() {
         }
 
         const { data, error } = await supabase
-            .from('barang')
+            .from('sub_bagian')
             .select('*')
-            .order('created_at', { ascending: false });
+            .order('nama', { ascending: true });
 
         if (error) {
-            console.error('Error fetching barang:', error);
-            return NextResponse.json({ error: 'Gagal mengambil data barang' }, { status: 500 });
+            console.error('SUPABASE ERROR (Sub Bagian GET):', error);
+            return NextResponse.json({ 
+                error: 'Gagal mengambil data sub bagian', 
+                details: error.message,
+                hint: error.hint,
+                code: error.code
+            }, { status: 500 });
         }
 
         return NextResponse.json({ data });
@@ -27,7 +34,7 @@ export async function GET() {
     }
 }
 
-// POST: Create new barang
+// POST: Create new sub-bagian
 export async function POST(request: Request) {
     try {
         const user = await getCurrentUser();
@@ -36,33 +43,30 @@ export async function POST(request: Request) {
         }
 
         const body = await request.json();
-        const { nama, kode, deskripsi, satuan } = body;
+        const { nama, deskripsi, pagu } = body;
 
         if (!nama) {
-            return NextResponse.json(
-                { error: 'Nama barang harus diisi' },
-                { status: 400 }
-            );
+            return NextResponse.json({ error: 'Nama sub bagian harus diisi' }, { status: 400 });
         }
 
         const { data, error } = await supabase
-            .from('barang')
+            .from('sub_bagian')
             // @ts-ignore
-            .insert({
-                nama,
-                kode,
-                deskripsi,
-                satuan: satuan || null
-            })
+            .insert({ nama, deskripsi, pagu: pagu || 0 })
             .select()
             .single();
 
         if (error) {
-            console.error('Error creating barang:', error);
-            return NextResponse.json({ error: 'Gagal menambah barang' }, { status: 500 });
+            console.error('SUPABASE ERROR (Sub Bagian POST):', error);
+            return NextResponse.json({ 
+                error: 'Gagal menambah sub bagian', 
+                details: error.message,
+                hint: error.hint,
+                code: error.code
+            }, { status: 500 });
         }
 
-        return NextResponse.json({ message: 'Barang berhasil ditambahkan', data }, { status: 201 });
+        return NextResponse.json({ message: 'Sub bagian berhasil ditambahkan', data }, { status: 201 });
     } catch (error) {
         console.error('Error:', error);
         return NextResponse.json({ error: 'Terjadi kesalahan server' }, { status: 500 });

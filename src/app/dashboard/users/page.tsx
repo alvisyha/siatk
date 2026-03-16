@@ -20,7 +20,17 @@ interface User {
     name: string;
     role: string;
     avatar: string | null;
+    sub_bagian_id: string | null;
+    sub_bagian?: {
+        id: string;
+        nama: string;
+    };
     password?: string; // For form only
+}
+
+interface SubBagian {
+    id: string;
+    nama: string;
 }
 
 export default function UsersPage() {
@@ -31,18 +41,33 @@ export default function UsersPage() {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [userToDelete, setUserToDelete] = useState<User | null>(null);
+    const [subBagianList, setSubBagianList] = useState<SubBagian[]>([]);
     const [formData, setFormData] = useState({
         email: '',
         name: '',
         role: 'user',
         password: '',
-        avatar: ''
+        avatar: '',
+        sub_bagian_id: ''
     });
     const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         fetchUsers();
+        fetchSubBagian();
     }, []);
+
+    const fetchSubBagian = async () => {
+        try {
+            const res = await fetch('/api/sub-bagian');
+            if (res.ok) {
+                const data = await res.json();
+                setSubBagianList(data.data);
+            }
+        } catch (error) {
+            console.error('Failed to fetch sub-bagian:', error);
+        }
+    };
 
     const fetchUsers = async () => {
         try {
@@ -66,7 +91,8 @@ export default function UsersPage() {
                 name: user.name,
                 role: user.role,
                 password: '', // Don't show password
-                avatar: user.avatar || ''
+                avatar: user.avatar || '',
+                sub_bagian_id: user.sub_bagian_id || ''
             });
         } else {
             setEditingUser(null);
@@ -75,7 +101,8 @@ export default function UsersPage() {
                 name: '',
                 role: 'user',
                 password: '',
-                avatar: ''
+                avatar: '',
+                sub_bagian_id: ''
             });
         }
         setIsModalOpen(true);
@@ -105,6 +132,11 @@ export default function UsersPage() {
                 delete bodyData.password;
             }
 
+            // Convert empty string to null for sub_bagian_id
+            if (!bodyData.sub_bagian_id) {
+                bodyData.sub_bagian_id = null;
+            }
+
             const res = await fetch(url, {
                 method,
                 headers: { 'Content-Type': 'application/json' },
@@ -115,7 +147,8 @@ export default function UsersPage() {
                 fetchUsers();
                 handleCloseModal();
             } else {
-                alert('Gagal menyimpan data user');
+                const errorData = await res.json();
+                alert(`Gagal menyimpan data user: ${errorData.error || 'Terjadi kesalahan'}\nDetail: ${errorData.details || 'Tidak ada detail'}`);
             }
         } catch (error) {
             console.error('Error saving user:', error);
@@ -192,6 +225,7 @@ export default function UsersPage() {
                             <tr>
                                 <th className="px-6 py-3">User</th>
                                 <th className="px-6 py-3">Role</th>
+                                <th className="px-6 py-3">Sub Bagian</th>
                                 <th className="px-6 py-3 text-right">Actions</th>
                             </tr>
                         </thead>
@@ -236,6 +270,11 @@ export default function UsersPage() {
                                                     : 'bg-gray-50 text-gray-700 border-gray-200'}`}>
                                                 {user.role === 'admin' ? <Shield className="w-3 h-3" /> : <UserIcon className="w-3 h-3" />}
                                                 {user.role}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className="text-gray-600">
+                                                {user.sub_bagian?.nama || '-'}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-right">
@@ -305,8 +344,21 @@ export default function UsersPage() {
                                     value={formData.password}
                                     onChange={e => setFormData({ ...formData, password: e.target.value })}
                                     className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder={editingUser ? "Leave blank to keep current" : "••••••••"}
+                                    placeholder={editingUser ? "Biarkan kosong untuk mempertahankan kata sandi saat ini" : "••••••••"}
                                 />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Sub Bagian</label>
+                                <select
+                                    value={formData.sub_bagian_id}
+                                    onChange={e => setFormData({ ...formData, sub_bagian_id: e.target.value })}
+                                    className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                    <option value="">Pilih Sub Bagian</option>
+                                    {subBagianList.map(sb => (
+                                        <option key={sb.id} value={sb.id}>{sb.nama}</option>
+                                    ))}
+                                </select>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>

@@ -11,3 +11,6 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
 export const getSupabaseClient = () => {
     return createClient<Database>(supabaseUrl, supabaseAnonKey);
 };
+
+// Export a helper to cast to any if types fail
+export const sb = supabase as any;

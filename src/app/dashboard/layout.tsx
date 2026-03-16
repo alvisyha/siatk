@@ -14,7 +14,18 @@ import {
     Search,
     ChevronDown,
     Box,
-    DoorOpen
+    DoorOpen,
+    Scale,
+    Tags,
+    ChevronRight,
+    Database,
+    ArrowDownLeft,
+    ArrowUpRight,
+    ClipboardList,
+    Briefcase,
+    Truck,
+    CheckCircle,
+    PackageCheck
 } from 'lucide-react';
 
 interface User {
@@ -27,8 +38,27 @@ interface User {
 
 const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
-    { icon: Box, label: 'Barang', href: '/dashboard/barang' },
-    { icon: DoorOpen, label: 'Ruangan', href: '/dashboard/ruangan' },
+    { icon: ClipboardList, label: 'Data ATK', href: '/dashboard/data-atk' },
+    {
+        icon: ClipboardList,
+        label: 'Transaksi',
+        subItems: [
+            { icon: ArrowDownLeft, label: 'Barang Masuk', href: '/dashboard/barang-masuk' },
+            { icon: ArrowUpRight, label: 'Barang Keluar', href: '/dashboard/barang-keluar' },
+            { icon: ClipboardList, label: 'Permintaan Barang', href: '/dashboard/permintaan-barang' },
+            { icon: PackageCheck, label: 'Barang Terkirim', href: '/dashboard/barang-diterima', roles: ['admin'] },
+            { icon: PackageCheck, label: 'Barang Diterima', href: '/dashboard/barang-diterima', roles: ['user'] },
+        ]
+    },
+    {
+        icon: Database,
+        label: 'Master Data',
+        subItems: [
+            { icon: Box, label: 'Barang', href: '/dashboard/barang' },
+            { icon: Briefcase, label: 'Sub Bagian', href: '/dashboard/sub-bagian' },
+            { icon: Truck, label: 'Supplier', href: '/dashboard/supplier' },
+        ]
+    },
     { icon: Users, label: 'Users', href: '/dashboard/users' },
     { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
 ];
@@ -43,10 +73,19 @@ export default function DashboardLayout({
     const [user, setUser] = useState<User | null>(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
+    const [openMenus, setOpenMenus] = useState<string[]>(['Master Data', 'Transaksi']); // Both groups open by default
 
     useEffect(() => {
         fetchUser();
     }, []);
+
+    const toggleMenu = (label: string) => {
+        setOpenMenus(prev =>
+            prev.includes(label)
+                ? prev.filter(m => m !== label)
+                : [...prev, label]
+        );
+    };
 
     const fetchUser = async () => {
         try {
@@ -71,7 +110,7 @@ export default function DashboardLayout({
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 text-gray-900">
             {/* Mobile Sidebar Backdrop */}
             {sidebarOpen && (
                 <div
@@ -88,34 +127,105 @@ export default function DashboardLayout({
                 {/* Sidebar Header */}
                 <div className="flex items-center justify-between h-16 px-6 border-b border-gray-100">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
-                            <LayoutDashboard className="w-4 h-4 text-white" />
+                        <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white">
+                            <LayoutDashboard className="w-4 h-4" />
                         </div>
                         <span className="text-lg font-bold text-gray-900">Dashboard</span>
                     </div>
                     <button
                         onClick={() => setSidebarOpen(false)}
-                        className="lg:hidden text-gray-400 hover:text-gray-600"
+                        className="lg:hidden text-gray-400 hover:text-gray-600 transition-colors"
                     >
                         <X className="w-6 h-6" />
                     </button>
                 </div>
 
                 {/* Navigation */}
-                <nav className="p-4 space-y-1">
+                <nav className="p-4 space-y-1.5 overflow-y-auto max-h-[calc(100vh-140px)]">
                     {menuItems.map((item) => {
-                        const isActive = pathname === item.href;
+                        let renderItem: any = { ...item };
+                        
+                        // Role-based filtering
+                        if (user?.role === 'user') {
+                            const allowedTopLevel = ['Dashboard', 'Data ATK'];
+                            if (allowedTopLevel.includes(item.label)) {
+                                // Keep it
+                            } else if (item.label === 'Transaksi') {
+                                // Filter sub-items for user
+                                const filteredSubItems = renderItem.subItems?.filter((sub: any) =>
+                                    sub.label === 'Permintaan Barang'
+                                ) || [];
+                                if (filteredSubItems.length === 0) return null;
+                                renderItem = { ...item, subItems: filteredSubItems };
+                            } else {
+                                return null;
+                            }
+                        } else if (user?.role === 'admin') {
+                            // Filter sub-items for admin (only show Barang Terkirim, hide Barang Diterima)
+                            if (renderItem.subItems) {
+                                const filteredSubItems = renderItem.subItems.filter((sub: any) => 
+                                    !sub.roles || sub.roles.includes('admin')
+                                );
+                                renderItem = { ...item, subItems: filteredSubItems };
+                            }
+                        }
+
+                        const hasSubItems = !!renderItem.subItems;
+                        const isOpen = openMenus.includes(renderItem.label);
+                        const isActive = pathname === renderItem.href || (renderItem.subItems?.some((sub: any) => pathname === sub.href));
+
+                        if (hasSubItems) {
+                            return (
+                                <div key={renderItem.label} className="space-y-1">
+                                    <button
+                                        onClick={() => toggleMenu(renderItem.label)}
+                                        className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 group ${isActive && !isOpen
+                                            ? 'bg-blue-50 text-blue-600'
+                                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                                            }`}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <renderItem.icon className={`w-5 h-5 ${isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'}`} />
+                                            <span className="font-medium">{renderItem.label}</span>
+                                        </div>
+                                        <ChevronRight className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-90 text-blue-500' : 'text-gray-400'}`} />
+                                    </button>
+
+                                    {isOpen && (
+                                        <div className="pl-4 space-y-1">
+                                            {renderItem.subItems?.map((sub: any) => {
+                                                const isSubActive = pathname === sub.href;
+                                                return (
+                                                    <Link
+                                                        key={sub.label}
+                                                        href={sub.href}
+                                                        className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-all duration-200 group ${isSubActive
+                                                            ? 'bg-blue-50 text-blue-600 font-medium border-l-2 border-blue-600 rounded-l-none'
+                                                            : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+                                                            }`}
+                                                    >
+                                                        <sub.icon className={`w-4 h-4 ${isSubActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'}`} />
+                                                        <span className="text-sm">{sub.label}</span>
+                                                    </Link>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        }
+
                         return (
                             <Link
-                                key={item.href}
-                                href={item.href}
+                                key={renderItem.label}
+                                href={renderItem.href || '#'}
                                 className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 group ${isActive
                                     ? 'bg-blue-50 text-blue-600 font-medium'
                                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                                     }`}
                             >
-                                <item.icon className={`w-5 h-5 ${isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'}`} />
-                                <span className={isActive ? 'font-medium' : ''}>{item.label}</span>
+                                <renderItem.icon className={`w-5 h-5 ${isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'}`} />
+                                <span className="font-medium">{renderItem.label}</span>
                             </Link>
                         );
                     })}

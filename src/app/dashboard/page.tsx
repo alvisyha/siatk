@@ -2,16 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import {
-    TrendingUp,
-    Users,
-    DollarSign,
-    Activity,
-    ArrowUpRight,
-    ArrowDownRight,
     Clock,
     CheckCircle2,
     AlertCircle,
-    MoreHorizontal
+    Package,
+    ArrowDownLeft,
+    ArrowUpRight,
+    Loader2,
+    AlertTriangle,
+    History
 } from 'lucide-react';
 
 interface User {
@@ -22,71 +21,43 @@ interface User {
     avatar: string;
 }
 
-interface StatCard {
-    title: string;
-    value: string;
-    change: string;
-    changeType: 'positive' | 'negative';
-    icon: React.ComponentType<{ className?: string }>;
-    color: string;
-    bgColor: string;
+interface Activity {
+    id: string;
+    created_at: string;
+    jumlah: number;
+    activityType: 'masuk' | 'keluar';
+    barang: { nama: string };
+    satuan?: { nama: string };
 }
 
-const stats: StatCard[] = [
-    {
-        title: 'Total Revenue',
-        value: 'Rp 45.2M',
-        change: '+12.5%',
-        changeType: 'positive',
-        icon: DollarSign,
-        color: 'text-emerald-600',
-        bgColor: 'bg-emerald-50'
-    },
-    {
-        title: 'Active Users',
-        value: '2,345',
-        change: '+8.2%',
-        changeType: 'positive',
-        icon: Users,
-        color: 'text-blue-600',
-        bgColor: 'bg-blue-50'
-    },
-    {
-        title: 'Conversion Rate',
-        value: '3.24%',
-        change: '-2.1%',
-        changeType: 'negative',
-        icon: TrendingUp,
-        color: 'text-purple-600',
-        bgColor: 'bg-purple-50'
-    },
-    {
-        title: 'Active Sessions',
-        value: '1,234',
-        change: '+15.3%',
-        changeType: 'positive',
-        icon: Activity,
-        color: 'text-orange-600',
-        bgColor: 'bg-orange-50'
-    }
-];
+interface LowStockItem {
+    id: string;
+    nama: string;
+    kode: string | null;
+    jumlah: number;
+    satuan?: { nama: string };
+}
 
-const recentActivities = [
-    { id: 1, user: 'John Doe', action: 'completed a purchase', time: '2 minutes ago', status: 'success' },
-    { id: 2, user: 'Jane Smith', action: 'updated profile settings', time: '15 minutes ago', status: 'info' },
-    { id: 3, user: 'Mike Johnson', action: 'submitted a support ticket', time: '1 hour ago', status: 'warning' },
-    { id: 4, user: 'Sarah Williams', action: 'joined the platform', time: '3 hours ago', status: 'success' },
-    { id: 5, user: 'Alex Brown', action: 'cancelled subscription', time: '5 hours ago', status: 'error' },
-];
+interface DashboardStats {
+    totalBarang: number;
+    masukHariIni: number;
+    keluarHariIni: number;
+    lowStockCount: number;
+}
 
 export default function DashboardPage() {
     const [user, setUser] = useState<User | null>(null);
     const [currentTime, setCurrentTime] = useState(new Date());
     const [mounted, setMounted] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [stats, setStats] = useState<DashboardStats | null>(null);
+    const [activities, setActivities] = useState<Activity[]>([]);
+    const [lowStockItems, setLowStockItems] = useState<LowStockItem[]>([]);
 
     useEffect(() => {
         setMounted(true);
         fetchUser();
+        fetchDashboardData();
         const timer = setInterval(() => setCurrentTime(new Date()), 1000);
         return () => clearInterval(timer);
     }, []);
@@ -103,29 +74,49 @@ export default function DashboardPage() {
         }
     };
 
-    const getStatusIcon = (status: string) => {
-        switch (status) {
-            case 'success':
-                return <CheckCircle2 className="w-5 h-5 text-green-500" />;
-            case 'warning':
-                return <AlertCircle className="w-5 h-5 text-amber-500" />;
-            case 'error':
-                return <AlertCircle className="w-5 h-5 text-red-500" />;
-            default:
-                return <Clock className="w-5 h-5 text-blue-500" />;
+    const fetchDashboardData = async () => {
+        setIsLoading(true);
+        try {
+            const res = await fetch('/api/dashboard/stats', { cache: 'no-store' });
+            if (res.ok) {
+                const data = await res.json();
+                setStats(data.stats);
+                setActivities(data.activities);
+                setLowStockItems(data.lowStockItems);
+            }
+        } catch (error) {
+            console.error('Failed to fetch dashboard data:', error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
+    const formatTime = (isoString: string) => {
+        const date = new Date(isoString);
+        return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    };
+
+    if (isLoading) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] text-gray-500">
+                <Loader2 className="w-10 h-10 animate-spin text-blue-600 mb-4" />
+                <p className="font-medium">Memuat dashboard Anda...</p>
+            </div>
+        );
+    }
+
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 animate-in fade-in duration-500">
             {/* Welcome Section */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-                        Welcome back, <span className="text-blue-600">{user?.name || 'User'}</span>! 👋
+                        Selamat Datang, <span className="text-blue-600">{user?.name || 'User'}</span>! 👋
                     </h1>
                     <p className="text-gray-500 mt-1">
-                        Here's what's happening with your dashboard today.
+                        {user?.role === 'admin' 
+                            ? 'Berikut adalah ringkasan inventaris ATK Anda hari ini.' 
+                            : 'Pantau status pengajuan barang Anda di sini.'}
                     </p>
                 </div>
                 <div className="flex items-center gap-3 px-4 py-2 bg-white rounded-lg border border-gray-200 shadow-sm text-sm">
@@ -137,117 +128,211 @@ export default function DashboardPage() {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-                {stats.map((stat, index) => (
-                    <div
-                        key={index}
-                        className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-all duration-300"
-                    >
-                        <div className="flex items-center justify-between mb-4">
-                            <div className={`p-3 rounded-lg ${stat.bgColor}`}>
-                                <stat.icon className={`w-6 h-6 ${stat.color}`} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 text-gray-900">
+                {user?.role === 'admin' ? (
+                    <>
+                        {/* Total Master Barang */}
+                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-all">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="p-3 rounded-lg bg-blue-50">
+                                    <Package className="w-6 h-6 text-blue-600" />
+                                </div>
                             </div>
-                            <div className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full ${stat.changeType === 'positive' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-                                }`}>
-                                {stat.changeType === 'positive' ? (
-                                    <ArrowUpRight className="w-3 h-3" />
-                                ) : (
-                                    <ArrowDownRight className="w-3 h-3" />
-                                )}
-                                {stat.change}
-                            </div>
+                            <h3 className="text-gray-500 text-sm font-medium mb-1">Total Jenis Barang</h3>
+                            <p className="text-2xl font-bold">{stats?.totalBarang || 0}</p>
                         </div>
-                        <h3 className="text-gray-500 text-sm font-medium mb-1">{stat.title}</h3>
-                        <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                    </div>
-                ))}
+
+                        {/* Masuk Hari Ini */}
+                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-all">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="p-3 rounded-lg bg-emerald-50 text-emerald-600">
+                                    <ArrowDownLeft className="w-6 h-6" />
+                                </div>
+                            </div>
+                            <h3 className="text-gray-500 text-sm font-medium mb-1">Masuk (Hari Ini)</h3>
+                            <p className="text-2xl font-bold">{stats?.masukHariIni || 0}</p>
+                        </div>
+
+                        {/* Keluar Hari Ini */}
+                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-all">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="p-3 rounded-lg bg-orange-50 text-orange-600">
+                                    <ArrowUpRight className="w-6 h-6" />
+                                </div>
+                            </div>
+                            <h3 className="text-gray-500 text-sm font-medium mb-1">Keluar (Hari Ini)</h3>
+                            <p className="text-2xl font-bold">{stats?.keluarHariIni || 0}</p>
+                        </div>
+
+                        {/* Stok Rendah */}
+                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-all">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="p-3 rounded-lg bg-red-50 text-red-600">
+                                    <AlertTriangle className="w-6 h-6" />
+                                </div>
+                            </div>
+                            <h3 className="text-gray-500 text-sm font-medium mb-1">Stok Menipis</h3>
+                            <p className="text-2xl font-bold">{stats?.lowStockCount || 0}</p>
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        {/* Total Pengajuan */}
+                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-all">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="p-3 rounded-lg bg-blue-50">
+                                    <History className="w-6 h-6 text-blue-600" />
+                                </div>
+                            </div>
+                            <h3 className="text-gray-500 text-sm font-medium mb-1">Total Pengajuan</h3>
+                            <p className="text-2xl font-bold">{(stats as any)?.totalRequest || 0}</p>
+                        </div>
+
+                        {/* Menunggu */}
+                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-all">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="p-3 rounded-lg bg-yellow-50 text-yellow-600">
+                                    <Clock className="w-6 h-6" />
+                                </div>
+                            </div>
+                            <h3 className="text-gray-500 text-sm font-medium mb-1">Menunggu</h3>
+                            <p className="text-2xl font-bold">{(stats as any)?.pendingCount || 0}</p>
+                        </div>
+
+                        {/* Disetujui */}
+                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-all">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="p-3 rounded-lg bg-emerald-50 text-emerald-600">
+                                    <CheckCircle2 className="w-6 h-6" />
+                                </div>
+                            </div>
+                            <h3 className="text-gray-500 text-sm font-medium mb-1">Disetujui</h3>
+                            <p className="text-2xl font-bold">{(stats as any)?.approvedCount || 0}</p>
+                        </div>
+
+                        {/* Ditolak */}
+                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-all">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="p-3 rounded-lg bg-red-50 text-red-600">
+                                    <AlertCircle className="w-6 h-6" />
+                                </div>
+                            </div>
+                            <h3 className="text-gray-500 text-sm font-medium mb-1">Ditolak</h3>
+                            <p className="text-2xl font-bold">{(stats as any)?.rejectedCount || 0}</p>
+                        </div>
+                    </>
+                )}
             </div>
 
             {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className={`grid grid-cols-1 ${user?.role === 'admin' ? 'lg:grid-cols-3' : 'lg:grid-cols-1'} gap-6 text-gray-900`}>
                 {/* Recent Activity */}
-                <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+                <div className={`${user?.role === 'admin' ? 'lg:col-span-2' : ''} bg-white rounded-xl border border-gray-100 shadow-sm p-6`}>
                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-lg font-bold text-gray-900">Recent Activity</h2>
-                        <button className="p-2 hover:bg-gray-50 rounded-lg transition-colors">
-                            <MoreHorizontal className="w-5 h-5 text-gray-400" />
-                        </button>
+                        <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                            <History className="w-5 h-5 text-gray-400" />
+                            {user?.role === 'admin' ? 'Aktivitas Terbaru' : 'Status Pengajuan Terbaru'}
+                        </h2>
                     </div>
 
                     <div className="space-y-4">
-                        {recentActivities.map((activity) => (
-                            <div
-                                key={activity.id}
-                                className="flex items-start gap-4 p-4 rounded-lg hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100"
-                            >
-                                <div className="mt-0.5">
-                                    {getStatusIcon(activity.status)}
-                                </div>
-                                <div className="flex-1">
-                                    <p className="text-gray-900 text-sm">
-                                        <span className="font-semibold">{activity.user}</span>{' '}
-                                        <span className="text-gray-600">{activity.action}</span>
-                                    </p>
-                                    <p className="text-xs text-gray-400 mt-1">{activity.time}</p>
-                                </div>
+                        {activities.length === 0 ? (
+                            <div className="py-10 text-center text-gray-500 italic">
+                                Belum ada aktivitas terbaru hari ini.
                             </div>
-                        ))}
+                        ) : (
+                            activities.map((activity) => (
+                                <div
+                                    key={activity.id}
+                                    className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100"
+                                >
+                                    <div className="mt-0.5">
+                                        {activity.activityType === 'masuk' ? (
+                                            <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                                                <ArrowDownLeft className="w-4 h-4 text-emerald-600" />
+                                            </div>
+                                        ) : activity.activityType === 'keluar' ? (
+                                            <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
+                                                <ArrowUpRight className="w-4 h-4 text-orange-600" />
+                                            </div>
+                                        ) : (
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center 
+                                                ${(activity as any).status === 'disetujui' ? 'bg-emerald-100 text-emerald-600' : 
+                                                  (activity as any).status === 'ditolak' ? 'bg-red-100 text-red-600' : 'bg-yellow-100 text-yellow-600'}`}>
+                                                <History className="w-4 h-4" />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-sm text-gray-900">
+                                            <span className="font-semibold">{activity.barang.nama}</span>
+                                            <span className="text-gray-500 ml-1">
+                                                {activity.activityType === 'masuk' ? 'telah masuk sebanyak' : 
+                                                 activity.activityType === 'keluar' ? 'telah keluar sebanyak' : 
+                                                 `sebanyak ${activity.jumlah} unit sedang ${(activity as any).status}`}
+                                            </span>
+                                            {(activity.activityType as any) !== 'permintaan' && (
+                                                <span className={`ml-1 font-bold ${activity.activityType === 'masuk' ? 'text-emerald-600' : 'text-orange-600'}`}>
+                                                    {activity.jumlah} {activity.satuan?.nama || 'unit'}
+                                                </span>
+                                            )}
+                                        </p>
+                                        <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                                            <Clock className="w-3 h-3" />
+                                            {formatTime(activity.created_at)}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))
+                        )}
                     </div>
                 </div>
 
-                {/* Quick Stats */}
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-                    <h2 className="text-lg font-bold text-gray-900 mb-6">Quick Stats</h2>
+                {/* Low Stock Alerts (Only for Admin) */}
+                {user?.role === 'admin' && (
+                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+                        <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                            <AlertTriangle className="w-5 h-5 text-red-500" />
+                            Peringatan Stok Rendah
+                        </h2>
 
-                    <div className="space-y-6">
-                        {/* Progress Item */}
-                        <div>
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-sm text-gray-600">Monthly Goal</span>
-                                <span className="text-sm font-medium text-gray-900">78%</span>
-                            </div>
-                            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                                <div className="h-full w-[78%] bg-blue-500 rounded-full" />
-                            </div>
-                        </div>
+                        <div className="space-y-4">
+                            {lowStockItems.length === 0 ? (
+                                <div className="py-6 text-center text-gray-500 text-sm italic">
+                                    Semua stok dalam kondisi aman.
+                                </div>
+                            ) : (
+                                lowStockItems.map((item) => (
+                                    <div key={item.id} className="p-3 bg-red-50/50 border border-red-100 rounded-lg">
+                                        <div className="flex items-start justify-between">
+                                            <div>
+                                                <h4 className="text-sm font-semibold text-gray-900">{item.nama}</h4>
+                                                <p className="text-xs text-gray-500 mt-0.5">{item.kode || '-'}</p>
+                                            </div>
+                                            <div className="text-center">
+                                                <p className="text-lg font-bold text-red-600 leading-none">{item.jumlah}</p>
+                                                <p className="text-[10px] text-red-400 mt-1 uppercase font-bold tracking-wider">{item.satuan?.nama || 'Unit'}</p>
+                                            </div>
+                                        </div>
+                                        {/* Progress indicate seriousness */}
+                                        <div className="mt-3 h-1.5 bg-red-100 rounded-full overflow-hidden">
+                                            <div 
+                                                className="h-full bg-red-500 rounded-full" 
+                                                style={{ width: `${Math.min((item.jumlah / 5) * 100, 100)}%` }} 
+                                            />
+                                        </div>
+                                    </div>
+                                ))
+                            )}
 
-                        <div>
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-sm text-gray-600">User Satisfaction</span>
-                                <span className="text-sm font-medium text-gray-900">92%</span>
-                            </div>
-                            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                                <div className="h-full w-[92%] bg-green-500 rounded-full" />
-                            </div>
-                        </div>
-
-                        <div>
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-sm text-gray-600">Task Completion</span>
-                                <span className="text-sm font-medium text-gray-900">64%</span>
-                            </div>
-                            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                                <div className="h-full w-[64%] bg-orange-500 rounded-full" />
-                            </div>
-                        </div>
-
-                        {/* Info Cards */}
-                        <div className="pt-6 border-t border-gray-100 space-y-3">
-                            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
-                                <span className="text-sm text-gray-600">Total Orders</span>
-                                <span className="text-sm font-bold text-gray-900">1,234</span>
-                            </div>
-                            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
-                                <span className="text-sm text-gray-600">Pending Tasks</span>
-                                <span className="text-sm font-bold text-gray-900">23</span>
-                            </div>
-                            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
-                                <span className="text-sm text-gray-600">Active Projects</span>
-                                <span className="text-sm font-bold text-gray-900">8</span>
+                            <div className="pt-4 border-t border-gray-100">
+                                 <p className="text-xs text-center text-gray-400">
+                                    Peringatan muncul untuk barang dengan stok rendah.
+                                 </p>
                             </div>
                         </div>
                     </div>
-                </div>
+                )}
             </div>
         </div>
     );

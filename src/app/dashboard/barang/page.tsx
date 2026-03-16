@@ -17,20 +17,10 @@ import {
 interface Barang {
     id: string;
     nama: string;
+    kode: string | null;
+    satuan: string | null;
     deskripsi: string | null;
-    kategori_id: string;
-    ruangan_id: string;
-    jumlah: number;
-    kondisi: string | null;
     created_at: string;
-    // Relations
-    kategori?: { id: string; nama: string };
-    ruangan?: { id: string; nama: string };
-}
-
-interface Kategori {
-    id: string;
-    nama: string;
 }
 
 interface Ruangan {
@@ -38,10 +28,13 @@ interface Ruangan {
     nama: string;
 }
 
+interface Satuan {
+    id: string;
+    nama: string;
+}
+
 export default function BarangPage() {
     const [barangList, setBarangList] = useState<Barang[]>([]);
-    const [kategoriList, setKategoriList] = useState<Kategori[]>([]);
-    const [ruanganList, setRuanganList] = useState<Ruangan[]>([]);
 
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -54,11 +47,9 @@ export default function BarangPage() {
     // Form State
     const [formData, setFormData] = useState({
         nama: '',
-        deskripsi: '',
-        kategori_id: '',
-        ruangan_id: '',
-        jumlah: 1,
-        kondisi: 'baik'
+        kode: '',
+        satuan: '',
+        deskripsi: ''
     });
 
     useEffect(() => {
@@ -68,23 +59,11 @@ export default function BarangPage() {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const [resBarang, resKategori, resRuangan] = await Promise.all([
-                fetch('/api/barang'),
-                fetch('/api/kategori'),
-                fetch('/api/ruangan')
-            ]);
+            const resBarang = await fetch('/api/barang');
 
             if (resBarang.ok) {
                 const data = await resBarang.json();
                 setBarangList(data.data);
-            }
-            if (resKategori.ok) {
-                const data = await resKategori.json();
-                setKategoriList(data.data);
-            }
-            if (resRuangan.ok) {
-                const data = await resRuangan.json();
-                setRuanganList(data.data);
             }
         } catch (error) {
             console.error('Failed to fetch data:', error);
@@ -98,22 +77,17 @@ export default function BarangPage() {
             setEditingBarang(barang);
             setFormData({
                 nama: barang.nama,
-                deskripsi: barang.deskripsi || '',
-                kategori_id: barang.kategori_id,
-                ruangan_id: barang.ruangan_id,
-                jumlah: barang.jumlah,
-                kondisi: barang.kondisi || 'baik'
+                kode: barang.kode || '',
+                satuan: barang.satuan || '',
+                deskripsi: barang.deskripsi || ''
             });
         } else {
             setEditingBarang(null);
-            // Defaul to first option if available
             setFormData({
                 nama: '',
-                deskripsi: '',
-                kategori_id: kategoriList.length > 0 ? kategoriList[0].id : '',
-                ruangan_id: ruanganList.length > 0 ? ruanganList[0].id : '',
-                jumlah: 1,
-                kondisi: 'baik'
+                kode: '',
+                satuan: '',
+                deskripsi: ''
             });
         }
         setIsModalOpen(true);
@@ -137,10 +111,13 @@ export default function BarangPage() {
             const url = editingBarang ? `/api/barang/${editingBarang.id}` : '/api/barang';
             const method = editingBarang ? 'PUT' : 'POST';
 
-            const res = await fetch(url, {
+        const payload = {
+            ...formData
+        };
+             const res = await fetch(url, {
                 method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
+                body: JSON.stringify(payload)
             });
 
             if (res.ok) {
@@ -186,17 +163,9 @@ export default function BarangPage() {
 
     const filteredBarang = barangList.filter(barang =>
         barang.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (barang.kode && barang.kode.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (barang.deskripsi && barang.deskripsi.toLowerCase().includes(searchTerm.toLowerCase()))
     );
-
-    const getKondisiColor = (kondisi: string | null) => {
-        switch (kondisi) {
-            case 'baik': return 'bg-green-50 text-green-700 border-green-200';
-            case 'rusak_ringan': return 'bg-yellow-50 text-yellow-700 border-yellow-200';
-            case 'rusak_berat': return 'bg-red-50 text-red-700 border-red-200';
-            default: return 'bg-gray-50 text-gray-700 border-gray-200';
-        }
-    };
 
     return (
         <div className="space-y-6">
@@ -236,63 +205,48 @@ export default function BarangPage() {
                     <table className="w-full text-left text-sm">
                         <thead className="bg-gray-50 text-gray-600 font-medium border-b border-gray-200">
                             <tr>
+                                <th className="px-6 py-3 w-32">Kode</th>
                                 <th className="px-6 py-3">Nama Barang</th>
-                                <th className="px-6 py-3">Kategori</th>
-                                <th className="px-6 py-3">Ruangan</th>
-                                <th className="px-6 py-3">Jumlah</th>
-                                <th className="px-6 py-3">Kondisi</th>
+                                <th className="px-6 py-3">Satuan</th>
+                                <th className="px-6 py-3">Keterangan</th>
                                 <th className="px-6 py-3 text-right">Aksi</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
                             {isLoading ? (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
                                         <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
                                         Memuat data barang...
                                     </td>
                                 </tr>
                             ) : filteredBarang.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
                                         Tidak ada data barang ditemukan.
                                     </td>
                                 </tr>
                             ) : (
                                 filteredBarang.map((barang) => (
                                     <tr key={barang.id} className="hover:bg-gray-50/50 transition-colors">
+                                        <td className="px-6 py-4 font-mono text-sm text-gray-600">
+                                            {barang.kode || '-'}
+                                        </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
                                                     <Box className="w-4 h-4" />
                                                 </div>
-                                                <div>
-                                                    <p className="font-medium text-gray-900">{barang.nama}</p>
-                                                    {barang.deskripsi && (
-                                                        <p className="text-gray-500 text-xs truncate max-w-[200px]">{barang.deskripsi}</p>
-                                                    )}
-                                                </div>
+                                                <p className="font-medium text-gray-900">{barang.nama}</p>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2 text-gray-600">
-                                                <Tag className="w-3.5 h-3.5" />
-                                                <span>{barang.kategori?.nama || '-'}</span>
-                                            </div>
+                                        <td className="px-6 py-4 text-gray-600">
+                                            {barang.satuan || '-'}
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2 text-gray-600">
-                                                <MapPin className="w-3.5 h-3.5" />
-                                                <span>{barang.ruangan?.nama || '-'}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 font-medium text-gray-900">
-                                            {barang.jumlah} Unit
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getKondisiColor(barang.kondisi)}`}>
-                                                {barang.kondisi?.replace('_', ' ') || 'baik'}
-                                            </span>
+                                            <p className="text-gray-500 text-sm truncate max-w-sm">
+                                                {barang.deskripsi || '-'}
+                                            </p>
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex items-center justify-end gap-2">
@@ -331,73 +285,39 @@ export default function BarangPage() {
                             </button>
                         </div>
                         <form onSubmit={handleSave} className="p-6 space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Nama Barang</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={formData.nama}
-                                    onChange={e => setFormData({ ...formData, nama: e.target.value })}
-                                    className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="Contoh: Laptop Dell"
-                                />
-                            </div>
-
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
-                                    <select
-                                        required
-                                        value={formData.kategori_id}
-                                        onChange={e => setFormData({ ...formData, kategori_id: e.target.value })}
-                                        className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    >
-                                        <option value="">Pilih Kategori</option>
-                                        {kategoriList.map(k => (
-                                            <option key={k.id} value={k.id}>{k.nama}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Ruangan</label>
-                                    <select
-                                        required
-                                        value={formData.ruangan_id}
-                                        onChange={e => setFormData({ ...formData, ruangan_id: e.target.value })}
-                                        className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    >
-                                        <option value="">Pilih Ruangan</option>
-                                        {ruanganList.map(r => (
-                                            <option key={r.id} value={r.id}>{r.nama}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Jumlah</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Kode Barang</label>
                                     <input
-                                        type="number"
-                                        required
-                                        min="1"
-                                        value={formData.jumlah}
-                                        onChange={e => setFormData({ ...formData, jumlah: parseInt(e.target.value) || 0 })}
+                                        type="text"
+                                        value={formData.kode}
+                                        onChange={e => setFormData({ ...formData, kode: e.target.value })}
                                         className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        placeholder="Contoh: BRG-001"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Kondisi</label>
-                                    <select
-                                        value={formData.kondisi}
-                                        onChange={e => setFormData({ ...formData, kondisi: e.target.value })}
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Nama Barang</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={formData.nama}
+                                        onChange={e => setFormData({ ...formData, nama: e.target.value })}
                                         className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    >
-                                        <option value="baik">Baik</option>
-                                        <option value="rusak_ringan">Rusak Ringan</option>
-                                        <option value="rusak_berat">Rusak Berat</option>
-                                    </select>
+                                        placeholder="Contoh: Laptop Dell"
+                                    />
                                 </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Satuan</label>
+                                <input
+                                    type="text"
+                                    value={formData.satuan}
+                                    onChange={e => setFormData({ ...formData, satuan: e.target.value })}
+                                    className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Contoh: Pcs, Rim, Box, Lusin"
+                                />
                             </div>
 
                             <div>

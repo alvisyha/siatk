@@ -30,21 +30,32 @@ export async function getCurrentUser(): Promise<Omit<User, 'password'> | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get('auth-token')?.value;
 
+  console.log('DEBUG: Auth Token found in cookie:', !!token);
+
   if (!token) return null;
 
   const verified = verifyToken(token);
+  console.log('DEBUG: Token verification status:', !!verified);
+  
   if (!verified) return null;
 
   // Query user from Supabase
   const { data: user, error } = await supabase
     .from('users')
-    .select('id, email, name, role, avatar, created_at, updated_at')
+    .select('*')
     .eq('id', verified.userId)
     .single();
 
-  if (error || !user) return null;
+  if (error || !user) {
+    console.log('DEBUG: User not found or Supabase error:', error?.message);
+    return null;
+  }
 
-  return user;
+  // Remove password from object
+  const { password: _, ...userWithoutPassword } = user as User;
+
+  console.log('DEBUG: Current User identified:', userWithoutPassword.email);
+  return userWithoutPassword;
 }
 
 // Validate user login credentials against Supabase
