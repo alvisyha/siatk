@@ -7,8 +7,11 @@ import {
     PackageCheck,
     Info,
     ChevronRight,
-    SearchX
+    SearchX,
+    Download
 } from 'lucide-react';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface ReceivedSummary {
     barang_id: string;
@@ -23,6 +26,7 @@ interface ReceivedSummary {
 export default function BarangDiterimaPage() {
     const [summary, setSummary] = useState<ReceivedSummary[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isExporting, setIsExporting] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [user, setUser] = useState<any>(null);
 
@@ -65,7 +69,7 @@ export default function BarangDiterimaPage() {
                             nama: r.barang?.nama || 'Unknown',
                             kode: r.barang?.kode || '-',
                             total: 0,
-                            satuan: r.barang?.satuan || '-',
+                            satuan: r.barang?.satuan?.nama || '-',
                             sub_bagian_nama: r.sub_bagian?.nama || (r.sub_bagian_id ? `Bagian ID: ${r.sub_bagian_id.substring(0,8)}` : 'Gudang/Umum')
                         };
                     }
@@ -78,6 +82,66 @@ export default function BarangDiterimaPage() {
             console.error('Failed to fetch received items:', error);
         } finally {
             setIsLoading(false);
+        }
+    };
+    
+    const exportToPDF = () => {
+        setIsExporting(true);
+        try {
+            const doc = new jsPDF();
+            const isAdmin = user?.role === 'admin';
+            const title = isAdmin ? 'LAPORAN BARANG TERKIRIM' : 'LAPORAN BARANG DITERIMA';
+            
+            // Branding
+            doc.setFontSize(22);
+            doc.setTextColor(37, 99, 235);
+            doc.text('ATKIS', 14, 20);
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text('ATK INFORMATION SYSTEM', 14, 26);
+            doc.line(14, 30, 196, 30);
+
+            // Title
+            doc.setFontSize(16);
+            doc.setTextColor(31, 41, 55);
+            doc.text(title, 14, 45);
+            doc.setFontSize(10);
+            doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 14, 52);
+
+            // Table Data
+            const head = isAdmin 
+                ? [['No', 'Sub Bagian', 'Nama Barang', 'Kode', 'Jumlah', 'Satuan']]
+                : [['No', 'Nama Barang', 'Kode', 'Jumlah', 'Satuan']];
+            
+            const body = filteredSummary.map((item, i) => {
+                const row = [
+                    i + 1,
+                    item.nama,
+                    item.kode || '-',
+                    item.total,
+                    item.satuan || '-'
+                ];
+                if (isAdmin) {
+                    row.splice(1, 0, item.sub_bagian_nama || '-');
+                }
+                return row;
+            });
+
+            autoTable(doc, {
+                startY: 60,
+                head: head,
+                body: body,
+                theme: 'striped',
+                headStyles: { fillColor: [37, 99, 235], textColor: 255 },
+                styles: { fontSize: 9 }
+            });
+
+            doc.save(`${title.replace(/ /g, '_')}_${new Date().getTime()}.pdf`);
+        } catch (error) {
+            console.error('PDF Export failed:', error);
+        } finally {
+            setIsExporting(setIsExporting === (false as any) ? false : false); // Safe reset
+            setIsExporting(false);
         }
     };
 
@@ -101,9 +165,19 @@ export default function BarangDiterimaPage() {
                             : 'Daftar akumulasi stok barang yang telah Anda terima'}
                     </p>
                 </div>
-                <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-100">
-                    <PackageCheck className="w-5 h-5" />
-                    <span className="text-sm font-semibold">Total Tipe Barang: {summary.length}</span>
+                <div className="flex flex-col md:flex-row items-center gap-3">
+                    <button
+                        onClick={exportToPDF}
+                        disabled={isLoading || summary.length === 0 || isExporting}
+                        className="flex items-center justify-center gap-2 px-5 py-2.5 bg-red-600 text-white rounded-xl font-bold text-sm shadow-md hover:bg-red-700 disabled:opacity-50 transition-all active:scale-95 shadow-red-200 w-full md:w-auto"
+                    >
+                        {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                        Export PDF
+                    </button>
+                    <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-100 w-full md:w-auto justify-center">
+                        <PackageCheck className="w-5 h-5" />
+                        <span className="text-sm font-semibold whitespace-nowrap">Total Tipe Barang: {summary.length}</span>
+                    </div>
                 </div>
             </div>
 
@@ -131,7 +205,7 @@ export default function BarangDiterimaPage() {
                                 <th className="px-6 py-4">Nama Barang</th>
                                 <th className="px-6 py-4">Kode</th>
                                 <th className="px-6 py-4 text-center">Jumlah</th>
-                                <th className="px-6 py-4">Unit</th>
+                                <th className="px-6 py-4">Satuan</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">

@@ -17,7 +17,6 @@ interface SubBagian {
     id: string;
     nama: string;
     deskripsi: string | null;
-    pagu: number;
     created_at: string;
 }
 
@@ -34,8 +33,7 @@ export default function SubBagianPage() {
     // Form State
     const [formData, setFormData] = useState({
         nama: '',
-        deskripsi: '',
-        pagu: 0
+        deskripsi: ''
     });
 
     useEffect(() => {
@@ -62,15 +60,13 @@ export default function SubBagianPage() {
             setEditingSubBagian(subBagian);
             setFormData({
                 nama: subBagian.nama,
-                deskripsi: subBagian.deskripsi || '',
-                pagu: subBagian.pagu || 0
+                deskripsi: subBagian.deskripsi || ''
             });
         } else {
             setEditingSubBagian(null);
             setFormData({
                 nama: '',
-                deskripsi: '',
-                pagu: 0
+                deskripsi: ''
             });
         }
         setIsModalOpen(true);
@@ -143,13 +139,7 @@ export default function SubBagianPage() {
         (s.deskripsi && s.deskripsi.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('id-ID', {
-            style: 'currency',
-            currency: 'IDR',
-            minimumFractionDigits: 0
-        }).format(amount);
-    };
+
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
@@ -188,7 +178,6 @@ export default function SubBagianPage() {
                         <thead className="bg-gray-50 text-gray-600 font-medium border-b border-gray-200">
                             <tr>
                                 <th className="px-6 py-4">Nama Sub Bagian</th>
-                                <th className="px-6 py-4">Pagu</th>
                                 <th className="px-6 py-4">Deskripsi</th>
                                 <th className="px-6 py-4 text-right">Aksi</th>
                             </tr>
@@ -222,7 +211,7 @@ export default function SubBagianPage() {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 font-medium text-gray-700">
-                                            {formatCurrency(item.pagu)}
+                                            {/* Pagu column removed */}
                                         </td>
                                         <td className="px-6 py-4 text-gray-600">
                                             {item.deskripsi || '-'}
@@ -277,20 +266,7 @@ export default function SubBagianPage() {
                                     placeholder="Contoh: Kepegawaian, Keuangan, Tata Usaha"
                                 />
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1.5">Pagu Anggaran</label>
-                                <div className="relative">
-                                    <span className="absolute left-4 top-2.5 text-gray-500 font-medium text-sm">Rp</span>
-                                    <input
-                                        type="number"
-                                        required
-                                        value={formData.pagu}
-                                        onChange={e => setFormData({ ...formData, pagu: parseFloat(e.target.value) || 0 })}
-                                        className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                        placeholder="0"
-                                    />
-                                </div>
-                            </div>
+
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Deskripsi (Opsional)</label>
                                 <textarea

@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import {
     Search,
     Plus,
@@ -19,8 +21,9 @@ interface Barang {
     id: string;
     nama: string;
     kode: string | null;
-    jumlah?: number;
-    satuan?: string | null;
+    stok?: number;
+    satuan?: { nama: string } | null;
+    status?: boolean;
 }
 
 interface SubBagian {
@@ -42,8 +45,8 @@ interface PermintaanBarang {
     barang?: {
         nama: string;
         kode: string | null;
-        satuan: string | null;
-        jumlah?: number;
+        satuan: { nama: string } | null;
+        stok?: number;
     };
     sub_bagian?: {
         nama: string;
@@ -212,6 +215,42 @@ export default function PermintaanBarangPage() {
         return matchesSearch && matchesStatus;
     });
 
+    const exportToPDF = () => {
+        const doc = new jsPDF();
+        
+        doc.setFontSize(16);
+        doc.text('Laporan Permintaan Barang', 14, 15);
+        doc.setFontSize(10);
+        doc.text(`Dicetak pada: ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`, 14, 22);
+        
+        const tableColumn = ["No", "Pemohon", "Sub Bagian", "Tanggal", "Barang", "Jumlah", "Status"];
+        const tableRows: any[] = [];
+
+        filteredRequests.forEach((item, index) => {
+            const rowData = [
+                index + 1,
+                item.pemohon || '-',
+                item.sub_bagian?.nama || '-',
+                new Date(item.tanggal).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+                item.barang?.nama || '-',
+                `${item.jumlah} ${item.barang?.satuan?.nama || ''}`,
+                item.status.toUpperCase()
+            ];
+            tableRows.push(rowData);
+        });
+
+        autoTable(doc, {
+            head: [tableColumn],
+            body: tableRows,
+            startY: 28,
+            theme: 'grid',
+            styles: { fontSize: 8 },
+            headStyles: { fillColor: [52, 152, 219], textColor: 255 }
+        });
+
+        doc.save(`permintaan_barang_${new Date().getTime()}.pdf`);
+    };
+
     const getStatusStyle = (status: string) => {
         switch (status) {
             case 'disetujui':
@@ -231,15 +270,23 @@ export default function PermintaanBarangPage() {
                     <h1 className="text-2xl font-bold text-gray-900">Permintaan Barang</h1>
                     <p className="text-gray-500 text-sm mt-1">Ajukan dan pantau permintaan Alat Tulis Kantor</p>
                 </div>
-                {userRole === 'user' && (
+                <div className="flex gap-2">
                     <button
-                        onClick={() => setIsModalOpen(true)}
-                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-sm shadow-blue-200 font-medium"
+                        onClick={exportToPDF}
+                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all shadow-sm shadow-red-200 font-medium"
                     >
-                        <Plus className="w-4 h-4" />
-                        Buat Pengajuan
+                        Export PDF
                     </button>
-                )}
+                    {userRole === 'user' && (
+                        <button
+                            onClick={() => setIsModalOpen(true)}
+                            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-sm shadow-blue-200 font-medium"
+                        >
+                            <Plus className="w-4 h-4" />
+                            Buat Pengajuan
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Table Card */}
@@ -285,7 +332,7 @@ export default function PermintaanBarangPage() {
                                 <th className="px-6 py-4">Tanggal</th>
                                 <th className="px-6 py-4 w-[30%]">Barang</th>
                                 <th className="px-6 py-4 text-center">Jumlah</th>
-                                <th className="px-6 py-4">Unit</th>
+                                <th className="px-6 py-4">Satuan</th>
                                 <th className="px-6 py-4">Status</th>
                                 <th className="px-6 py-4">Keterangan</th>
                                 {userRole === 'admin' && <th className="px-6 py-4 text-center">Aksi</th>}
@@ -322,7 +369,7 @@ export default function PermintaanBarangPage() {
                                             <div className="text-xs text-gray-500 font-mono">{item.barang?.kode || '-'}</div>
                                         </td>
                                         <td className="px-6 py-4 text-center font-bold text-gray-900">{item.jumlah}</td>
-                                        <td className="px-6 py-4 text-gray-600">{item.barang?.satuan || '-'}</td>
+                                        <td className="px-6 py-4 text-gray-600">{item.barang?.satuan?.nama || '-'}</td>
                                         <td className="px-6 py-4">
                                             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${getStatusStyle(item.status)}`}>
                                                 {item.status === 'pending' && <Clock className="w-3 h-3" />}
@@ -411,14 +458,14 @@ export default function PermintaanBarangPage() {
                                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-none"
                                 >
                                     <option value="">-- Pilih Barang --</option>
-                                    {barangList.map(b => (
+                                    {barangList.filter(b => b.status !== false).map(b => (
                                         <option key={b.id} value={b.id}>{b.nama}</option>
                                     ))}
                                 </select>
                                 {formData.barang_id && (() => {
                                     const selectedBarang = barangList.find(b => b.id === formData.barang_id);
                                     if (selectedBarang) {
-                                        const physicalStock = selectedBarang.jumlah || 0;
+                                        const physicalStock = selectedBarang.stok || 0;
                                         const pendingSum = (requestList || [])
                                             .filter(r => r.barang_id === formData.barang_id && r.status === 'pending')
                                             .reduce((sum, r) => sum + (r.jumlah || 0), 0);
@@ -431,18 +478,18 @@ export default function PermintaanBarangPage() {
                                                         <p className="text-xs text-blue-600 font-semibold uppercase tracking-wider">Informasi Stok</p>
                                                         <div className="flex justify-between items-center text-sm">
                                                             <span className="text-gray-600">Stok di Gudang:</span>
-                                                            <span className="font-bold text-gray-900">{physicalStock} {selectedBarang.satuan || ''}</span>
+                                                            <span className="font-bold text-gray-900">{physicalStock} {selectedBarang.satuan?.nama || ''}</span>
                                                         </div>
                                                         <div className="flex justify-between items-center text-sm">
                                                             <span className="text-gray-600">Terpesan (Pending):</span>
                                                             <span className={`font-bold ${pendingSum > 0 ? 'text-orange-600' : 'text-gray-400'}`}>
-                                                                {pendingSum > 0 ? `-${pendingSum}` : '0'} {selectedBarang.satuan || ''}
+                                                                {pendingSum > 0 ? `-${pendingSum}` : '0'} {selectedBarang.satuan?.nama || ''}
                                                             </span>
                                                         </div>
                                                         <div className="pt-1 border-t border-blue-200 flex justify-between items-center text-sm">
                                                             <span className="text-blue-700 font-medium">Tersedia (Siap Pesan):</span>
                                                             <span className="font-bold text-blue-700">
-                                                                {availableStock} {selectedBarang.satuan || ''}
+                                                                {availableStock} {selectedBarang.satuan?.nama || ''}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -472,14 +519,14 @@ export default function PermintaanBarangPage() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Unit</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Satuan</label>
                                     <input
                                         type="text"
                                         readOnly
                                         disabled
-                                        value={barangList.find(b => b.id === formData.barang_id)?.satuan || ''}
+                                        value={barangList.find(b => b.id === formData.barang_id)?.satuan?.nama || ''}
                                         className="w-full px-4 py-2.5 bg-gray-100 border border-gray-300 rounded-xl text-gray-500 cursor-not-allowed"
-                                        placeholder="Unit"
+                                        placeholder="Satuan"
                                     />
                                 </div>
                             </div>
@@ -504,7 +551,7 @@ export default function PermintaanBarangPage() {
                             </div>
                             {(() => {
                                 const selected = barangList.find(b => b.id === formData.barang_id);
-                                const physicalStock = selected?.jumlah ?? 0;
+                                const physicalStock = selected?.stok ?? 0;
                                 const pendingSum = (requestList || [])
                                     .filter(r => r.barang_id === formData.barang_id && r.status === 'pending')
                                     .reduce((sum, r) => sum + (r.jumlah || 0), 0);
@@ -587,21 +634,21 @@ export default function PermintaanBarangPage() {
                                 <div className="border-t border-gray-200"></div>
                                 <div className="flex justify-between">
                                     <span className="text-gray-500">Jumlah Barang (Stok)</span>
-                                    <span className="font-bold text-blue-600">{selectedRequest.barang?.jumlah ?? 0} {selectedRequest.barang?.satuan || ''}</span>
+                                    <span className="font-bold text-blue-600">{selectedRequest.barang?.stok ?? 0} {selectedRequest.barang?.satuan?.nama || ''}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-gray-500">Jumlah Pengajuan</span>
-                                    <span className="font-bold text-orange-600">{selectedRequest.jumlah} {selectedRequest.barang?.satuan || ''}</span>
+                                    <span className="font-bold text-orange-600">{selectedRequest.jumlah} {selectedRequest.barang?.satuan?.nama || ''}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-gray-500">Sisa Stok (setelah disetujui)</span>
-                                    <span className={`font-bold ${((selectedRequest.barang?.jumlah ?? 0) - selectedRequest.jumlah) < 0 ? 'text-red-600' : 'text-emerald-600'}`}>
-                                        {(selectedRequest.barang?.jumlah ?? 0) - selectedRequest.jumlah} {selectedRequest.barang?.satuan || ''}
+                                    <span className={`font-bold ${((selectedRequest.barang?.stok ?? 0) - selectedRequest.jumlah) < 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                                        {(selectedRequest.barang?.stok ?? 0) - selectedRequest.jumlah} {selectedRequest.barang?.satuan?.nama || ''}
                                     </span>
                                 </div>
                             </div>
 
-                            {((selectedRequest.barang?.jumlah ?? 0) - selectedRequest.jumlah) < 0 && (
+                            {((selectedRequest.barang?.stok ?? 0) - selectedRequest.jumlah) < 0 && (
                                 <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
                                     <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
                                     <span>Stok tidak mencukupi! Sisa stok akan menjadi negatif jika disetujui.</span>

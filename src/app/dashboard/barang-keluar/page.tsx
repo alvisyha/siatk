@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 import {
     Search,
     Plus,
@@ -19,6 +22,9 @@ interface Barang {
     id: string;
     nama: string;
     kode: string | null;
+    stok?: number | null;
+    satuan?: { id: string, nama: string } | null;
+    status?: boolean;
 }
 
 interface SubBagian {
@@ -38,7 +44,7 @@ interface BarangKeluar {
     barang?: {
         nama: string;
         kode: string | null;
-        satuan: string | null;
+        satuan: { nama: string } | null;
     };
 }
 
@@ -181,6 +187,78 @@ export default function BarangKeluarPage() {
         t.barang?.kode?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    const exportToPDF = () => {
+        const doc = new jsPDF();
+        
+        doc.setFontSize(16);
+        doc.text('Laporan Barang Keluar', 14, 15);
+        doc.setFontSize(10);
+        doc.text(`Dicetak pada: ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`, 14, 22);
+        
+        const tableColumn = ["Kode", "Tanggal", "Nama Barang", "Jumlah", "Penerima"];
+        const tableRows: any[] = [];
+
+        filteredTransaksi.forEach(tr => {
+            const rowData = [
+                tr.kode_transaksi || '-',
+                new Date(tr.tanggal).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+                tr.barang?.nama || '-',
+                `${tr.jumlah} ${tr.barang?.satuan?.nama || ''}`,
+                tr.penerima || '-'
+            ];
+            tableRows.push(rowData);
+        });
+
+        autoTable(doc, {
+            head: [tableColumn],
+            body: tableRows,
+            startY: 28,
+            theme: 'grid',
+            styles: { fontSize: 8 },
+            headStyles: { fillColor: [231, 76, 60], textColor: 255 }
+        });
+
+        doc.save(`barang_keluar_${new Date().getTime()}.pdf`);
+    };
+
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsLoading(true);
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            try {
+                const data = event.target?.result;
+                const workbook = XLSX.read(data, { type: 'binary' });
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+                const res = await fetch('/api/barang-keluar/import', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: jsonData })
+                });
+
+                const result = await res.json();
+                if (res.ok) {
+                    alert(result.message);
+                    fetchData();
+                } else {
+                    alert(`Gagal import: ${result.error}`);
+                }
+            } catch (error) {
+                console.error('Error parsing excel:', error);
+                alert('Gagal membaca file excel. Pastikan format sesuai.');
+            } finally {
+                setIsLoading(false);
+                if (e.target) e.target.value = '';
+            }
+        };
+        reader.readAsBinaryString(file);
+    };
+
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             {/* Header */}
@@ -189,13 +267,34 @@ export default function BarangKeluarPage() {
                     <h1 className="text-2xl font-bold text-gray-900">Barang Keluar</h1>
                     <p className="text-gray-500 text-sm mt-1">Catat dan pantau pengeluaran stok barang</p>
                 </div>
-                <button
-                    onClick={() => handleOpenModal()}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all shadow-sm shadow-red-200 font-medium"
-                >
-                    <Plus className="w-4 h-4" />
-                    Tambah Barang Keluar
-                </button>
+                <div className="flex gap-2">
+                    <input 
+                        type="file" 
+                        accept=".xlsx, .xls" 
+                        className="hidden" 
+                        id="import-excel" 
+                        onChange={handleFileUpload}
+                    />
+                    <label
+                        htmlFor="import-excel"
+                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-sm shadow-blue-200 font-medium cursor-pointer"
+                    >
+                        Import Excel
+                    </label>
+                    <button
+                        onClick={exportToPDF}
+                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all shadow-sm shadow-red-200 font-medium"
+                    >
+                        Export PDF
+                    </button>
+                    <button
+                        onClick={() => handleOpenModal()}
+                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-sm shadow-blue-200 font-medium"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Tambah Barang Keluar
+                    </button>
+                </div>
             </div>
 
             {/* Table Card */}
@@ -258,12 +357,12 @@ export default function BarangKeluarPage() {
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-red-100 text-red-800 border-none">
-                                                -{tr.jumlah} {tr.barang?.satuan || ''}
+                                                -{tr.jumlah} {tr.barang?.satuan?.nama || ''}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className="font-medium text-blue-600">
-                                                {tr.stok ?? '-'} {tr.barang?.satuan || ''}
+                                                {tr.stok ?? '-'} {tr.barang?.satuan?.nama || ''}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-gray-600">{tr.penerima || '-'}</td>
@@ -319,7 +418,7 @@ export default function BarangKeluarPage() {
                                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all border-none shadow-none disabled:bg-gray-100 disabled:cursor-not-allowed"
                                 >
                                     <option value="">-- Pilih Barang --</option>
-                                    {barangList.map(b => (
+                                    {barangList.filter(b => b.status !== false).map(b => (
                                         <option key={b.id} value={b.id}>
                                             {b.nama} {b.kode ? `(${b.kode})` : ''}
                                         </option>
@@ -334,7 +433,7 @@ export default function BarangKeluarPage() {
                                         return (
                                             <p className="mt-2 text-sm text-gray-600 flex items-center gap-1.5">
                                                 <Info className="w-4 h-4 text-blue-500" />
-                                                Sisa Stok: <strong className="text-gray-900">{selectedBarang.stok} {selectedBarang.satuan || ''}</strong>
+                                                Sisa Stok: <strong className="text-gray-900">{selectedBarang.stok} {selectedBarang.satuan?.nama || ''}</strong>
                                             </p>
                                         );
                                     }
@@ -356,14 +455,14 @@ export default function BarangKeluarPage() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1.5 ">Unit</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1.5 ">Satuan</label>
                                     <input
                                         type="text"
                                         readOnly
                                         disabled
-                                        value={barangList.find(b => b.id === formData.barang_id)?.satuan || ''}
+                                        value={barangList.find(b => b.id === formData.barang_id)?.satuan?.nama || ''}
                                         className="w-full px-4 py-2.5 bg-gray-100 border border-gray-300 rounded-xl text-gray-500 cursor-not-allowed"
-                                        placeholder="Unit"
+                                        placeholder="Satuan"
                                     />
                                 </div>
                             </div>
@@ -418,7 +517,7 @@ export default function BarangKeluarPage() {
                                 <button
                                     type="submit"
                                     disabled={isSaving}
-                                    className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all shadow-sm shadow-red-100 font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+                                    className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-sm shadow-blue-100 font-medium disabled:opacity-50 flex items-center justify-center gap-2"
                                 >
                                     {isSaving ? (
                                         <>

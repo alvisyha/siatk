@@ -14,6 +14,7 @@ export interface User {
     role: string
     avatar: string | null
     sub_bagian_id: string | null
+    sub_bagian?: { nama: string }
     created_at: string
     updated_at: string | null
 }

@@ -39,7 +39,7 @@ export async function getCurrentUser(): Promise<Omit<User, 'password'> | null> {
   
   if (!verified) return null;
 
-  // Query user from Supabase
+  // Query user and sub_bagian separately to avoid join errors
   const { data: user, error } = await supabase
     .from('users')
     .select('*')
@@ -51,11 +51,28 @@ export async function getCurrentUser(): Promise<Omit<User, 'password'> | null> {
     return null;
   }
 
-  // Remove password from object
-  const { password: _, ...userWithoutPassword } = user as User;
+  const userData = user as any;
 
-  console.log('DEBUG: Current User identified:', userWithoutPassword.email);
-  return userWithoutPassword;
+  // Manually fetch sub_bagian name if sub_bagian_id exists
+  let subBagianData = null;
+  if (userData.sub_bagian_id) {
+    const { data: sub } = await supabase
+      .from('sub_bagian')
+      .select('nama')
+      .eq('id', userData.sub_bagian_id)
+      .single();
+    subBagianData = sub;
+  }
+
+  // Remove password from object and add sub_bagian
+  const { password: _, ...userWithoutPassword } = userData;
+  const finalUser = {
+    ...userWithoutPassword,
+    sub_bagian: subBagianData || undefined
+  } as any;
+
+  console.log('DEBUG: Current User identified:', finalUser.email);
+  return finalUser;
 }
 
 // Validate user login credentials against Supabase

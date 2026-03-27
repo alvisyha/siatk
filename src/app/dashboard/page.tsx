@@ -10,8 +10,10 @@ import {
     ArrowUpRight,
     Loader2,
     AlertTriangle,
-    History
+    History,
+    PlusCircle
 } from 'lucide-react';
+import Link from 'next/link';
 
 interface User {
     id: string;
@@ -27,7 +29,7 @@ interface Activity {
     jumlah: number;
     activityType: 'masuk' | 'keluar';
     barang: { nama: string };
-    satuan?: { nama: string };
+    satuan?: string;
 }
 
 interface LowStockItem {
@@ -35,7 +37,8 @@ interface LowStockItem {
     nama: string;
     kode: string | null;
     jumlah: number;
-    satuan?: { nama: string };
+    satuan?: string;
+    stok_minimum: number;
 }
 
 interface DashboardStats {
@@ -118,6 +121,16 @@ export default function DashboardPage() {
                             ? 'Berikut adalah ringkasan inventaris ATK Anda hari ini.' 
                             : 'Pantau status pengajuan barang Anda di sini.'}
                     </p>
+                    {user?.role === 'user' && (
+                        <div className="mt-4">
+                            <Link href="/dashboard/permintaan-barang">
+                                <button className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-sm shadow-blue-200 font-medium text-sm">
+                                    <PlusCircle className="w-4 h-4" />
+                                    Buat Permintaan Baru
+                                </button>
+                            </Link>
+                        </div>
+                    )}
                 </div>
                 <div className="flex items-center gap-3 px-4 py-2 bg-white rounded-lg border border-gray-200 shadow-sm text-sm">
                     <Clock className="w-4 h-4 text-gray-400" />
@@ -227,15 +240,15 @@ export default function DashboardPage() {
             {/* Main Content Grid */}
             <div className={`grid grid-cols-1 ${user?.role === 'admin' ? 'lg:grid-cols-3' : 'lg:grid-cols-1'} gap-6 text-gray-900`}>
                 {/* Recent Activity */}
-                <div className={`${user?.role === 'admin' ? 'lg:col-span-2' : ''} bg-white rounded-xl border border-gray-100 shadow-sm p-6`}>
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                            <History className="w-5 h-5 text-gray-400" />
+                <div className={`${user?.role === 'admin' ? 'lg:col-span-2' : ''} bg-white rounded-xl border border-gray-100 shadow-sm p-4 md:p-5 flex flex-col`}>
+                    <div className="flex items-center justify-between mb-4 border-b border-gray-50 pb-3">
+                        <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                            <History className="w-4 h-4 text-gray-400" />
                             {user?.role === 'admin' ? 'Aktivitas Terbaru' : 'Status Pengajuan Terbaru'}
                         </h2>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="flex-1 overflow-y-auto pr-1 space-y-2 max-h-[320px]">
                         {activities.length === 0 ? (
                             <div className="py-10 text-center text-gray-500 italic">
                                 Belum ada aktivitas terbaru hari ini.
@@ -273,11 +286,13 @@ export default function DashboardPage() {
                                             </span>
                                             {(activity.activityType as any) !== 'permintaan' && (
                                                 <span className={`ml-1 font-bold ${activity.activityType === 'masuk' ? 'text-emerald-600' : 'text-orange-600'}`}>
-                                                    {activity.jumlah} {activity.satuan?.nama || 'unit'}
+                                                    {activity.jumlah} {activity.satuan || 'unit'}
                                                 </span>
                                             )}
                                         </p>
-                                        <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                                    </div>
+                                    <div className="text-right shrink-0">
+                                        <p className="text-[11px] text-gray-400 flex items-center gap-1">
                                             <Clock className="w-3 h-3" />
                                             {formatTime(activity.created_at)}
                                         </p>
@@ -311,16 +326,17 @@ export default function DashboardPage() {
                                             </div>
                                             <div className="text-center">
                                                 <p className="text-lg font-bold text-red-600 leading-none">{item.jumlah}</p>
-                                                <p className="text-[10px] text-red-400 mt-1 uppercase font-bold tracking-wider">{item.satuan?.nama || 'Unit'}</p>
+                                                <p className="text-[10px] text-red-400 mt-1 uppercase font-bold tracking-wider">{item.satuan || 'Satuan'}</p>
                                             </div>
                                         </div>
                                         {/* Progress indicate seriousness */}
                                         <div className="mt-3 h-1.5 bg-red-100 rounded-full overflow-hidden">
                                             <div 
                                                 className="h-full bg-red-500 rounded-full" 
-                                                style={{ width: `${Math.min((item.jumlah / 5) * 100, 100)}%` }} 
+                                                style={{ width: `${Math.min((item.jumlah / Math.max(item.stok_minimum, 1)) * 100, 100)}%` }} 
                                             />
                                         </div>
+                                        <p className="text-[10px] text-red-500 mt-1.5 text-right font-medium">Batas Minimum: {item.stok_minimum}</p>
                                     </div>
                                 ))
                             )}

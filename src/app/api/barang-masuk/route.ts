@@ -12,29 +12,41 @@ export async function GET() {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { data, error } = await sb
+        const { data: bmData, error: bmError } = await sb
             .from('barang_masuk')
-            .select(`
-                *,
-                harga,
-                barang:barang_id (
-                    id, 
-                    nama, 
-                    kode,
-                    satuan
-                )
-            `)
+            .select('*')
             .order('tanggal', { ascending: false });
 
-        if (error) {
-            console.error('Error fetching barang masuk:', error);
+        if (bmError) {
+            console.error('Error fetching barang masuk:', bmError);
             return NextResponse.json({ error: 'Gagal mengambil data barang masuk' }, { status: 500 });
         }
 
+        const [barangList, satuanList] = await Promise.all([
+            sb.from('barang').select('id, nama, kode, satuan_id'),
+            sb.from('satuan').select('id, nama')
+        ]);
+
+        const data = (bmData || []).map((item: any) => {
+            const b = (barangList.data || []).find((x: any) => x.id === item.barang_id);
+            const s = (satuanList.data || []).find((x: any) => x.id === item.satuan_id);
+            return {
+                ...item,
+                jumlah: Number(item.jumlah) || 0,
+                harga: Number(item.harga) || 0,
+                stok: Number(item.stok) || 0,
+                barang: b ? { 
+                    ...b, 
+                    satuan: (satuanList.data || []).find((x: any) => x.id === b.satuan_id) || null
+                } : null,
+                satuan: s || null
+            };
+        });
+
         return NextResponse.json({ data });
-    } catch (error) {
-        console.error('Error:', error);
-        return NextResponse.json({ error: 'Terjadi kesalahan server' }, { status: 500 });
+    } catch (error: any) {
+        console.error('CRITICAL ERROR in barang-masuk GET:', error);
+        return NextResponse.json({ error: 'Terjadi kesalahan server', details: error.message }, { status: 500 });
     }
 }
 
@@ -81,33 +93,20 @@ export async function POST(request: Request) {
 
         console.log('DEBUG: Attempting to find barang with ID:', barang_id);
 
-        // Get current stock
-        const { data: currentBarang, error: fetchError } = await sb
+        // Get current stock and unit info from barang table
+        const { data: currentBarang, error: barangError } = await sb
             .from('barang')
-            .select('jumlah')
+            .select('stok, satuan_id')
             .eq('id', barang_id)
-            .maybeSingle(); // Use maybeSingle to avoid 406/single error if not found
+            .single();
 
-        if (fetchError) {
-            console.error('DEBUG: Supabase error during lookup:', fetchError.message, fetchError.code);
-            return NextResponse.json({ 
-                error: 'Terjadi kesalahan saat mencari barang', 
-                details: fetchError.message,
-                code: fetchError.code
-            }, { status: 500 });
+        if (barangError) {
+            console.error('SERVER ERROR (Get Barang Info):', barangError);
+            return NextResponse.json({ error: 'Barang tidak ditemukan' }, { status: 404 });
         }
 
-        if (!currentBarang) {
-            console.error('DEBUG: No barang found for ID:', barang_id);
-            return NextResponse.json({ 
-                error: 'Barang tidak ditemukan', 
-                details: `Item dengan ID ${barang_id} tidak ada di database.`,
-                sent_id: barang_id
-            }, { status: 404 });
-        }
-
-        const current_jumlah = (currentBarang as any)?.jumlah || 0;
-        const new_stok = current_jumlah + parseInt(jumlah);
+        const current_stok = currentBarang?.stok || 0;
+        const new_stok = current_stok + parseInt(jumlah);
 
         const { data, error } = await supabase
             .from('barang_masuk')
@@ -119,17 +118,10 @@ export async function POST(request: Request) {
                 pemasok,
                 keterangan,
                 kode_transaksi,
-                harga: parseInt(harga) || 0
-            } as any) // Use as any to bypass lint while types settle
-            .select(`
-                *,
-                barang:barang_id (
-                    id, 
-                    nama, 
-                    kode,
-                    satuan
-                )
-            `)
+                harga: parseInt(harga) || 0,
+                satuan_id: currentBarang?.satuan_id || null
+            } as any)
+            .select()
             .single();
 
         if (error) {
@@ -140,11 +132,29 @@ export async function POST(request: Request) {
             }, { status: 500 });
         }
 
-        // Update current stock in barang table
-        // @ts-ignore
-        await sb.from('barang').update({ jumlah: new_stok }).eq('id', barang_id);
+        const resData = data as any;
 
-        return NextResponse.json({ message: 'Data barang masuk berhasil ditambahkan', data }, { status: 201 });
+        // Fetch related info for response
+        const [bInfo, sInfo] = await Promise.all([
+            sb.from('barang').select('id, nama, kode, satuan_id').eq('id', resData.barang_id).single(),
+            sb.from('satuan').select('id, nama').eq('id', resData.satuan_id).single()
+        ]);
+
+        const enrichedData = {
+            ...resData,
+            jumlah: Number(resData.jumlah) || 0,
+            harga: Number(resData.total_harga || resData.harga) || 0,
+            barang: bInfo.data ? {
+                ...bInfo.data,
+                satuan: (await sb.from('satuan').select('id, nama').eq('id', bInfo.data.satuan_id).single()).data || null
+            } : null,
+            satuan: sInfo.data || null
+        };
+
+        // Update current stock in barang table
+        await sb.from('barang').update({ stok: new_stok }).eq('id', barang_id);
+
+        return NextResponse.json({ message: 'Data barang masuk berhasil ditambahkan', data: enrichedData }, { status: 201 });
     } catch (error) {
         console.error('Error:', error);
         return NextResponse.json({ error: 'Terjadi kesalahan server' }, { status: 500 });

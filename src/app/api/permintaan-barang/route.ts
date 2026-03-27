@@ -11,29 +11,46 @@ export async function GET() {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        // Fetch requests with joined data
-        let query = sb
-            .from('permintaan_barang')
-            .select(`
-                *,
-                barang:barang_id (id, nama, kode, jumlah, satuan),
-                sub_bagian:sub_bagian_id (id, nama),
-                user_email:user_id
-            `);
+        // Initialize query
+        let query = sb.from('permintaan_barang').select('*');
 
         // If not admin, filter by sub_bagian_id
         if (user.role !== 'admin') {
             if (user.sub_bagian_id) {
                 query = query.eq('sub_bagian_id', user.sub_bagian_id);
             } else {
-                // Fallback to their own requests if no sub_bagian is assigned to the user profile
                 query = query.eq('user_id', user.id);
             }
         }
 
-        const { data, error } = await query.order('created_at', { ascending: false });
+        const { data: pbData, error: pbError } = await query.order('created_at', { ascending: false });
 
-        if (error) throw error;
+        if (pbError) throw pbError;
+
+        const [barangList, satuanList, subBagianList] = await Promise.all([
+            sb.from('barang').select('id, nama, kode, stok, satuan_id'),
+            sb.from('satuan').select('id, nama'),
+            sb.from('sub_bagian').select('id, nama')
+        ]);
+
+        const data = (pbData || []).map((item: any) => {
+            const b = (barangList.data || []).find((x: any) => x.id === item.barang_id);
+            const s = (satuanList.data || []).find((x: any) => x.id === item.satuan_id);
+            const sbeg = (subBagianList.data || []).find((x: any) => x.id === item.sub_bagian_id);
+
+            return {
+                ...item,
+                jumlah: Number(item.jumlah) || 0,
+                barang: b ? { 
+                    ...b, 
+                    stok: Number(b.stok) || 0,
+                    satuan: (satuanList.data || []).find((x: any) => x.id === b.satuan_id) || null
+                } : null,
+                satuan: s || null,
+                sub_bagian: sbeg || null,
+                user_email: item.user_id 
+            };
+        });
 
         return NextResponse.json({ data });
     } catch (error: any) {
@@ -68,7 +85,7 @@ export async function POST(request: Request) {
         // 1. Get Physical Stock
         const { data: barang, error: bError } = await sb
             .from('barang')
-            .select('jumlah, nama')
+            .select('stok, nama, satuan_id')
             .eq('id', barang_id)
             .single();
         
@@ -84,11 +101,11 @@ export async function POST(request: Request) {
         if (pError) throw pError;
 
         const totalPending = (pendingReqs as any[])?.reduce((acc, curr) => acc + (curr.jumlah || 0), 0) || 0;
-        const availableStock = (barang.jumlah || 0) - totalPending;
+        const availableStock = (barang?.stok || 0) - totalPending;
 
         if (qty > availableStock) {
             return NextResponse.json({ 
-                error: `Stok tidak mencukupi. Tersedia: ${availableStock} (Gudang: ${barang.jumlah}, Antrean: ${totalPending})` 
+                error: `Stok tidak mencukupi. Tersedia: ${availableStock} (Gudang: ${barang?.stok}, Antrean: ${totalPending})` 
             }, { status: 400 });
         }
         // --- End Stock Reservation Logic ---
@@ -103,14 +120,28 @@ export async function POST(request: Request) {
                 tanggal: tanggal || new Date().toISOString(),
                 keterangan,
                 pemohon: pemohon || null,
-                status: 'pending'
+                status: 'pending',
+                satuan_id: barang?.satuan_id || null
             }])
             .select()
             .single();
 
         if (error) throw error;
 
-        return NextResponse.json({ data, message: 'Permintaan berhasil diajukan dan stok telah dipesan' });
+        // Fetch related info for response
+        const bInfo = await sb.from('barang').select('id, nama, kode, stok, satuan_id').eq('id', data.barang_id).single();
+        const sInfo = await sb.from('satuan').select('id, nama').eq('id', data.satuan_id).single();
+
+        const enrichedData = {
+            ...data,
+            barang: bInfo.data ? {
+                ...bInfo.data,
+                satuan: (await sb.from('satuan').select('id, nama').eq('id', bInfo.data.satuan_id).single()).data || null
+            } : null,
+            satuan: sInfo.data || null
+        };
+
+        return NextResponse.json({ data: enrichedData, message: 'Permintaan berhasil diajukan dan stok telah dipesan' });
     } catch (error: any) {
         console.error('Error creating request:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
@@ -152,13 +183,13 @@ export async function PUT(request: Request) {
             // Get current stock
             const { data: barang } = await sb
                 .from('barang')
-                .select('jumlah, nama')
+                .select('stok, nama')
                 .eq('id', reqData.barang_id)
                 .single();
 
             if (!barang) throw new Error('Barang tidak ditemukan');
             
-            const currentStock = barang.jumlah || 0;
+            const currentStock = barang.stok || 0;
             if (currentStock < reqData.jumlah) {
                 return NextResponse.json({ error: `Gagal menyetujui: Stok fisik di gudang (${currentStock}) tidak mencukupi.` }, { status: 400 });
             }
@@ -166,7 +197,7 @@ export async function PUT(request: Request) {
             const newStock = currentStock - reqData.jumlah;
             const { error: updateError } = await sb
                 .from('barang')
-                .update({ jumlah: newStock })
+                .update({ stok: newStock })
                 .eq('id', reqData.barang_id);
             
             if (updateError) throw updateError;
@@ -176,14 +207,14 @@ export async function PUT(request: Request) {
         if (status !== 'disetujui' && reqData.status === 'disetujui') {
             const { data: barang } = await sb
                 .from('barang')
-                .select('jumlah')
+                .select('stok')
                 .eq('id', reqData.barang_id)
                 .single();
 
             if (barang) {
-                const currentStock = barang.jumlah || 0;
+                const currentStock = barang.stok || 0;
                 const newStock = currentStock + reqData.jumlah;
-                await sb.from('barang').update({ jumlah: newStock }).eq('id', reqData.barang_id);
+                await sb.from('barang').update({ stok: newStock }).eq('id', reqData.barang_id);
             }
         }
 

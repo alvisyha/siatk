@@ -195,7 +195,7 @@ export default function UsersPage() {
                 </div>
                 <button
                     onClick={() => handleOpenModal()}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-sm shadow-blue-200 font-medium"
                 >
                     <Plus className="w-5 h-5" />
                     <span>Add User</span>
@@ -393,7 +393,7 @@ export default function UsersPage() {
                                 <button
                                     type="submit"
                                     disabled={isSaving}
-                                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-2"
+                                    className="px-4 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all shadow-sm shadow-blue-100 flex items-center gap-2"
                                 >
                                     {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
                                     {editingUser ? 'Save Changes' : 'Create User'}

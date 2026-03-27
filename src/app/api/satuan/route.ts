@@ -47,10 +47,13 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Nama satuan harus diisi' }, { status: 400 });
         }
 
+        const insertData: any = { nama };
+        if (deskripsi) insertData.deskripsi = deskripsi;
+
         const { data, error } = await supabase
             .from('satuan')
             // @ts-ignore
-            .insert({ nama, deskripsi })
+            .insert(insertData)
             .select()
             .single();
 

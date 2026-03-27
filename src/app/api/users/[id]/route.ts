@@ -34,6 +34,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
             const { sub_bagian_id: _, ...updatesWithoutSubBagian } = updates;
             const retry = await supabase
                 .from('users')
+                // @ts-ignore
                 .update(updatesWithoutSubBagian)
                 .eq('id', id)
                 .select()
@@ -67,6 +68,25 @@ export async function DELETE(request: Request, { params }: RouteParams) {
 
         const { id } = await params;
 
+        // Prevent deleting yourself
+        if (currentUser.id === id) {
+            return NextResponse.json({ error: 'Tidak dapat menghapus akun sendiri' }, { status: 400 });
+        }
+
+        // Clean up FK references before deleting user
+        const { error: permintaanError } = await supabase
+            .from('permintaan_barang')
+            .delete()
+            .eq('user_id', id);
+
+        if (permintaanError) {
+            console.error('Error deleting related permintaan_barang:', permintaanError);
+            return NextResponse.json({ 
+                error: 'Gagal menghapus data permintaan terkait', 
+                details: permintaanError.message 
+            }, { status: 500 });
+        }
+
         const { error } = await supabase
             .from('users')
             .delete()
@@ -74,7 +94,10 @@ export async function DELETE(request: Request, { params }: RouteParams) {
 
         if (error) {
             console.error('Error deleting user:', error);
-            return NextResponse.json({ error: 'Gagal menghapus user' }, { status: 500 });
+            return NextResponse.json({ 
+                error: 'Gagal menghapus user', 
+                details: error.message 
+            }, { status: 500 });
         }
 
         return NextResponse.json({ message: 'User berhasil dihapus' });

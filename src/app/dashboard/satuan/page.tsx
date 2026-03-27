@@ -214,14 +214,14 @@ export default function SatuanPage() {
                                                 <button
                                                     onClick={() => handleOpenModal(satuan)}
                                                     className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                                                    title="Edit Unit"
+                                                    title="Edit Satuan"
                                                 >
                                                     <Edit className="w-4 h-4" />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteClick(satuan)}
                                                     className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                                                    title="Hapus Unit"
+                                                    title="Hapus Satuan"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
                                                 </button>
@@ -256,7 +256,7 @@ export default function SatuanPage() {
                                     value={formData.nama}
                                     onChange={e => setFormData({ ...formData, nama: e.target.value })}
                                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                    placeholder="Contoh: Pcs, Unit, Box"
+                                    placeholder="Contoh: Pcs, Rim, Box"
                                 />
                             </div>
                             <div>

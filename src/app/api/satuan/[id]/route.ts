@@ -43,11 +43,15 @@ export async function PUT(request: Request, { params }: RouteParams) {
 
         const { id } = await params;
         const body = await request.json();
+        
+        const updateData: any = {};
+        if (body.nama !== undefined) updateData.nama = body.nama;
+        if (body.deskripsi !== undefined) updateData.deskripsi = body.deskripsi;
 
         const { data, error } = await supabase
             .from('satuan')
             // @ts-ignore
-            .update(body)
+            .update(updateData)
             .eq('id', id)
             .select()
             .single();

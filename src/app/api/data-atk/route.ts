@@ -11,24 +11,30 @@ export async function GET() {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        // Fetch all barang with their category and unit
-        const { data: barangList, error: barangError } = await sb
-            .from('barang')
-            .select(`
-                id,
-                nama,
-                kode,
-                harga,
-                deskripsi,
-                jumlah,
-                satuan
-            `)
-            .order('nama', { ascending: true });
+        // Fetch all barang and satuan separately
+        const [barangRes, satuanRes] = await Promise.all([
+            sb.from('barang').select('*').order('nama', { ascending: true }),
+            sb.from('satuan').select('id, nama')
+        ]);
 
-        if (barangError) {
-            console.error('Error fetching barang:', barangError);
-            return NextResponse.json({ error: 'Gagal mengambil data summary ATK' }, { status: 500 });
+        if (barangRes.error) {
+            console.error('Error fetching data-atk (barang):', barangRes.error);
+            return NextResponse.json({ error: 'Gagal mengambil data ATK' }, { status: 500 });
         }
+
+        if (satuanRes.error) {
+            console.error('Error fetching data-atk (satuan):', satuanRes.error);
+            return NextResponse.json({ error: 'Gagal mengambil data ATK' }, { status: 500 });
+        }
+
+        // Merge satuan data into barangList
+        const barangList = (barangRes.data || []).map((item: any) => {
+            const s = (satuanRes.data || []).find((x: any) => x.id === item.satuan_id);
+            return {
+                ...item,
+                satuan: s ? { nama: s.nama } : null
+            };
+        });
 
         console.log(`DEBUG: Data ATK API - Fetched ${barangList.length} items from 'barang' table`);
 
@@ -57,22 +63,23 @@ export async function GET() {
         console.log(`DEBUG: Data ATK API - Aggregated ${incomingData?.length || 0} incoming and ${outgoingData?.length || 0} outgoing records`);
 
         const summary = (barangList as any[]).map(item => {
+            const masuk = Number(incomingMap[item.id] || 0);
+            const keluar = Number(outgoingMap[item.id] || 0);
             return {
                 id: item.id,
                 kode: item.kode,
                 nama: item.nama,
-                harga: item.harga || 0,
-                satuan: item.satuan || '-',
-                masuk: incomingMap[item.id] || 0,
-                keluar: outgoingMap[item.id] || 0,
-                sisa: item.jumlah || 0,
+                satuan: item.satuan?.nama || '-',
+                masuk,
+                keluar,
+                sisa: masuk - keluar,
                 keterangan: item.deskripsi || '-'
             };
         });
 
         return NextResponse.json({ data: summary });
-    } catch (error) {
-        console.error('Error:', error);
-        return NextResponse.json({ error: 'Terjadi kesalahan server' }, { status: 500 });
+    } catch (error: any) {
+        console.error('CRITICAL ERROR in data-atk GET:', error);
+        return NextResponse.json({ error: 'Terjadi kesalahan server', details: error.message }, { status: 500 });
     }
 }
