@@ -43,8 +43,8 @@ interface LowStockItem {
 
 interface DashboardStats {
     totalBarang: number;
-    masukHariIni: number;
-    keluarHariIni: number;
+    totalMasukHariIni: number;
+    totalKeluarHariIni: number;
     lowStockCount: number;
 }
 
@@ -162,8 +162,8 @@ export default function DashboardPage() {
                                     <ArrowDownLeft className="w-6 h-6" />
                                 </div>
                             </div>
-                            <h3 className="text-gray-500 text-sm font-medium mb-1">Masuk (Hari Ini)</h3>
-                            <p className="text-2xl font-bold">{stats?.masukHariIni || 0}</p>
+                            <h3 className="text-gray-500 text-sm font-medium mb-1">Transaksi Masuk</h3>
+                            <p className="text-2xl font-bold">{stats?.totalMasukHariIni || 0}</p>
                         </div>
 
                         {/* Keluar Hari Ini */}
@@ -173,8 +173,8 @@ export default function DashboardPage() {
                                     <ArrowUpRight className="w-6 h-6" />
                                 </div>
                             </div>
-                            <h3 className="text-gray-500 text-sm font-medium mb-1">Keluar (Hari Ini)</h3>
-                            <p className="text-2xl font-bold">{stats?.keluarHariIni || 0}</p>
+                            <h3 className="text-gray-500 text-sm font-medium mb-1">Transaksi Keluar</h3>
+                            <p className="text-2xl font-bold">{stats?.totalKeluarHariIni || 0}</p>
                         </div>
 
                         {/* Stok Rendah */}
@@ -257,7 +257,7 @@ export default function DashboardPage() {
                             activities.map((activity) => (
                                 <div
                                     key={activity.id}
-                                    className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100"
+                                    className="flex items-center gap-4 p-3.5 rounded-xl bg-gray-50/50 border border-gray-100 hover:bg-white hover:shadow-sm hover:border-blue-100 transition-all duration-300 group"
                                 >
                                     <div className="mt-0.5">
                                         {activity.activityType === 'masuk' ? (
@@ -306,10 +306,20 @@ export default function DashboardPage() {
                 {/* Low Stock Alerts (Only for Admin) */}
                 {user?.role === 'admin' && (
                     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-                        <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                            <AlertTriangle className="w-5 h-5 text-red-500" />
-                            Peringatan Stok Rendah
-                        </h2>
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                <AlertTriangle className="w-5 h-5 text-red-500" />
+                                Peringatan Stok Rendah
+                            </h2>
+                            {lowStockItems.length > 0 && (
+                                <Link 
+                                    href="/dashboard/barang" 
+                                    className="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline transition-all"
+                                >
+                                    Lihat Semua
+                                </Link>
+                            )}
+                        </div>
 
                         <div className="space-y-4">
                             {lowStockItems.length === 0 ? (
@@ -317,33 +327,44 @@ export default function DashboardPage() {
                                     Semua stok dalam kondisi aman.
                                 </div>
                             ) : (
-                                lowStockItems.map((item) => (
-                                    <div key={item.id} className="p-3 bg-red-50/50 border border-red-100 rounded-lg">
+                                lowStockItems.slice(0, 3).map((item) => (
+                                    <div key={item.id} className="p-3 bg-red-50/50 border border-red-100 rounded-lg group hover:bg-red-50 transition-all duration-300">
                                         <div className="flex items-start justify-between">
-                                            <div>
-                                                <h4 className="text-sm font-semibold text-gray-900">{item.nama}</h4>
-                                                <p className="text-xs text-gray-500 mt-0.5">{item.kode || '-'}</p>
+                                            <div className="flex-1 mr-2">
+                                                <h4 className="text-sm font-semibold text-gray-900 truncate">{item.nama}</h4>
+                                                <p className="text-[10px] text-gray-500 mt-0.5 font-mono">{item.kode || '-'}</p>
                                             </div>
-                                            <div className="text-center">
+                                            <div className="text-right shrink-0">
                                                 <p className="text-lg font-bold text-red-600 leading-none">{item.jumlah}</p>
-                                                <p className="text-[10px] text-red-400 mt-1 uppercase font-bold tracking-wider">{item.satuan || 'Satuan'}</p>
+                                                <p className="text-[9px] text-red-400 mt-1 uppercase font-bold tracking-tighter">{item.satuan || 'Unit'}</p>
                                             </div>
                                         </div>
                                         {/* Progress indicate seriousness */}
-                                        <div className="mt-3 h-1.5 bg-red-100 rounded-full overflow-hidden">
+                                        <div className="mt-3 h-1.5 bg-red-100/50 rounded-full overflow-hidden">
                                             <div 
-                                                className="h-full bg-red-500 rounded-full" 
+                                                className="h-full bg-red-500 rounded-full transition-all duration-500" 
                                                 style={{ width: `${Math.min((item.jumlah / Math.max(item.stok_minimum, 1)) * 100, 100)}%` }} 
                                             />
                                         </div>
-                                        <p className="text-[10px] text-red-500 mt-1.5 text-right font-medium">Batas Minimum: {item.stok_minimum}</p>
+                                        <div className="flex justify-between items-center mt-2">
+                                            <span className="text-[9px] text-gray-400">Ambang: {item.stok_minimum}</span>
+                                            <span className="text-[10px] text-red-500 font-semibold">Tersisa {(item.jumlah / Math.max(item.stok_minimum, 1) * 100).toFixed(0)}%</span>
+                                        </div>
                                     </div>
                                 ))
                             )}
 
-                            <div className="pt-4 border-t border-gray-100">
-                                 <p className="text-xs text-center text-gray-400">
-                                    Peringatan muncul untuk barang dengan stok rendah.
+                            {(stats?.lowStockCount || 0) > 3 && (
+                                <div className="p-2 py-1.5 bg-gray-50 rounded-lg text-center">
+                                    <p className="text-[11px] text-gray-500 font-medium italic">
+                                        + {(stats?.lowStockCount || 0) - 3} barang lainnya juga menipis
+                                    </p>
+                                </div>
+                            )}
+
+                            <div className="pt-4 mt-2">
+                                 <p className="text-[11px] text-center text-gray-400 italic">
+                                    Segera lakukan transaksi barang masuk untuk menjaga ketersediaan stok.
                                  </p>
                             </div>
                         </div>

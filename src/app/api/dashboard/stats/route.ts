@@ -12,11 +12,16 @@ export async function GET() {
         }
 
         const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        // Use local date string for 'tanggal' columns (YYYY-MM-DD)
-        const todayDateOnly = today.toISOString().split('T')[0];
-        // Use ISO string for 'created_at' columns
-        const todayStartISO = today.toISOString();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const todayDateOnly = `${year}-${month}-${day}`;
+        const dateStr = `${year}${month}${day}`;
+
+        // For safe range filtering (handles some timezone overlap)
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayDateOnly = yesterday.toISOString().split('T')[0];
 
         if (user.role === 'admin') {
             // 1. Total Items (Master)
@@ -24,28 +29,54 @@ export async function GET() {
                 sb.from('barang').select('id, nama, kode, satuan_id'),
                 sb.from('satuan').select('id, nama')
             ]);
+            
+            if (allBarangRes.error) console.error('Dashboard Stats Error (allBarang):', allBarangRes.error);
+
             const allBarang = (allBarangRes.data || []).map((b: any) => ({
                 ...b,
                 satuan: (satuanRes.data || []).find((s: any) => s.id === b.satuan_id) || null
             }));
-            const totalBarang = (allBarang as any[])?.length || 0;
+            const totalBarang = (allBarangRes.data || []).length || 0;
     
-            // 2. Incoming Today
-            const { data: incomingToday } = await sb
+            // 2. Incoming Today (Using robust transaction code prefix + generous date range)
+            const { data: incomingToday, error: incomingError } = await sb
                 .from('barang_masuk')
-                .select('jumlah')
-                .gte('tanggal', todayDateOnly);
-            const totalMasukHariIni = (incomingToday as any[])?.reduce((acc, curr) => acc + (curr.jumlah || 0), 0) || 0;
+                .select('jumlah, kode_transaksi, tanggal, created_at')
+                .gte('tanggal', yesterdayDateOnly); 
+            
+            if (incomingError) console.error('Dashboard Stats Error (incoming):', incomingError);
+            
+            const filteredIncoming = (incomingToday || []).filter((item: any) => {
+                const isTodayCode = item.kode_transaksi?.startsWith(`BM-${dateStr}-`);
+                // Format to local date string (YYYY-MM-DD) in Jakarta timezone
+                const itemDate = item.tanggal ? new Date(item.tanggal).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' }) : '';
+                const itemCreated = item.created_at ? new Date(item.created_at).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' }) : '';
+                return isTodayCode || itemDate === todayDateOnly || itemCreated === todayDateOnly;
+            });
+            const totalMasukHariIni = filteredIncoming.length;
 
             // 3. Outgoing Today
-            const { data: outgoingToday } = await sb
+            const { data: outgoingToday, error: outgoingError } = await sb
                 .from('barang_keluar')
-                .select('jumlah')
-                .gte('tanggal', todayDateOnly);
-            const totalKeluarHariIni = (outgoingToday as any[])?.reduce((acc, curr) => acc + (curr.jumlah || 0), 0) || 0;
+                .select('jumlah, kode_transaksi, tanggal, created_at')
+                .gte('tanggal', yesterdayDateOnly);
+            
+            if (outgoingError) console.error('Dashboard Stats Error (outgoing):', outgoingError);
+            
+            const filteredOutgoing = (outgoingToday || []).filter((item: any) => {
+                const isTodayCode = item.kode_transaksi?.startsWith(`BK-${dateStr}-`);
+                const itemDate = item.tanggal ? new Date(item.tanggal).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' }) : '';
+                const itemCreated = item.created_at ? new Date(item.created_at).toISOString().split('T')[0] : '';
+                return isTodayCode || itemDate === todayDateOnly || itemCreated === todayDateOnly;
+            });
+            const totalKeluarHariIni = filteredOutgoing.length;
 
             // 4. Low Stock Items (threshold <= stok_minimum)
-            const allBarangWithStock = (await sb.from('barang').select('id, nama, kode, satuan_id, stok, stok_minimum')).data || [];
+            const allBarangWithStockRes = await sb.from('barang').select('id, nama, kode, satuan_id, stok, stok_minimum');
+            if (allBarangWithStockRes.error) console.error('Dashboard Stats Error (lowStock):', allBarangWithStockRes.error);
+            
+            const allBarangWithStock = allBarangWithStockRes.data || [];
+            const lowStockCount = (allBarangWithStock as any[])?.filter(b => b.stok <= (b.stok_minimum || 0)).length || 0;
             const lowStockItems = allBarangWithStock.filter((b: any) => b.stok <= (b.stok_minimum || 0)).map((b: any) => ({
                 id: b.id,
                 nama: b.nama,
@@ -53,10 +84,8 @@ export async function GET() {
                 jumlah: b.stok || 0,
                 satuan: (satuanRes.data || []).find((s: any) => s.id === b.satuan_id)?.nama || '-',
                 stok_minimum: b.stok_minimum || 0
-            })).sort((a: any, b: any) => a.jumlah - b.jumlah).slice(0, 5) || [];
+            })).sort((a: any, b: any) => a.jumlah - b.jumlah).slice(0, 10) || [];
 
-            const lowStockCount = (allBarangWithStock as any[])?.filter(b => b.stok <= (b.stok_minimum || 0)).length || 0;
-    
             // 5. Recent Activities
             const [recentMasuk, recentKeluar] = await Promise.all([
                 sb.from('barang_masuk')
