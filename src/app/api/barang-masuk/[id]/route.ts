@@ -50,20 +50,24 @@ export async function PUT(
 
         // 3. Update stock in barang table
         // Difference = new - old
-        // For incoming: if new > old, stock increases. if new < old, stock decreases.
         const diff = parseInt(new_jumlah) - old_jumlah;
 
         // Get current stock in barang table
         const { data: barang } = await sb
             .from('barang')
-            .select('jumlah')
+            .select('stok')
             .eq('id', barang_id)
             .single();
+        
         if (barang) {
-            const current_total = barang.jumlah || 0;
+            const current_total = barang.stok || 0;
             const updated_total = current_total + diff;
 
-            await sb.from('barang').update({ jumlah: updated_total }).eq('id', barang_id);
+            // Update main stock
+            await sb.from('barang').update({ stok: updated_total }).eq('id', barang_id);
+
+            // Also update the snapshot stok in the transaction itself
+            await sb.from('barang_masuk').update({ stok: updated_total }).eq('id', id);
         }
 
         return NextResponse.json({ message: 'Transaksi berhasil diperbarui', data });
@@ -111,15 +115,15 @@ export async function DELETE(
         // 3. Subtract from stock in barang table
         const { data: barang } = await sb
             .from('barang')
-            .select('jumlah')
+            .select('stok')
             .eq('id', barang_id)
             .single();
 
         if (barang) {
-            const current_total = barang.jumlah || 0;
+            const current_total = barang.stok || 0;
             const updated_total = current_total - amountToDelete;
 
-            await sb.from('barang').update({ jumlah: updated_total }).eq('id', barang_id);
+            await sb.from('barang').update({ stok: updated_total }).eq('id', barang_id);
         }
 
         return NextResponse.json({ message: 'Transaksi berhasil dihapus' });

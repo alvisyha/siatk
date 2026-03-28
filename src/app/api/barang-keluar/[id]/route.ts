@@ -40,7 +40,7 @@ export async function PUT(
         // Get current stock in barang table
         const { data: barang } = await sb
             .from('barang')
-            .select('jumlah')
+            .select('stok')
             .eq('id', barang_id)
             .single();
 
@@ -48,7 +48,7 @@ export async function PUT(
             return NextResponse.json({ error: 'Data barang tidak ditemukan' }, { status: 404 });
         }
 
-        const current_total = barang.jumlah || 0;
+        const current_total = barang.stok || 0;
         const updated_total = current_total - diff;
 
         if (updated_total < 0) {
@@ -73,7 +73,10 @@ export async function PUT(
         }
 
         // Apply stock update
-            await sb.from('barang').update({ jumlah: updated_total }).eq('id', barang_id);
+        await sb.from('barang').update({ stok: updated_total }).eq('id', barang_id);
+
+        // Also update the snapshot stok in the transaction record
+        await sb.from('barang_keluar').update({ stok: updated_total }).eq('id', id);
 
         return NextResponse.json({ message: 'Transaksi berhasil diperbarui', data });
     } catch (error) {
@@ -121,15 +124,15 @@ export async function DELETE(
         // 3. Add back to stock in barang table
         const { data: barang } = await sb
             .from('barang')
-            .select('jumlah')
+            .select('stok')
             .eq('id', barang_id)
             .single();
 
         if (barang) {
-            const current_total = barang.jumlah || 0;
+            const current_total = barang.stok || 0;
             const updated_total = current_total + amountToReturn;
 
-            await sb.from('barang').update({ jumlah: updated_total }).eq('id', barang_id);
+            await sb.from('barang').update({ stok: updated_total }).eq('id', barang_id);
         }
 
         return NextResponse.json({ message: 'Transaksi berhasil dihapus' });

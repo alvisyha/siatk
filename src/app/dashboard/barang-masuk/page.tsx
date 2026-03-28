@@ -16,7 +16,8 @@ import {
     Edit,
     Trash2,
     AlertCircle,
-    Banknote
+    Banknote,
+    ChevronDown
 } from 'lucide-react';
 
 interface Barang {
@@ -61,6 +62,8 @@ export default function BarangMasukPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [editingTransaksi, setEditingTransaksi] = useState<BarangMasuk | null>(null);
     const [transaksiToDelete, setTransaksiToDelete] = useState<BarangMasuk | null>(null);
+    const [isExportDropdownOpen, setIsExportDropdownOpen] = useState(false);
+    const [isImportDropdownOpen, setIsImportDropdownOpen] = useState(false);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -236,6 +239,45 @@ export default function BarangMasukPage() {
         doc.save(`barang_masuk_${new Date().getTime()}.pdf`);
     };
 
+    const exportToExcel = () => {
+        const worksheetData = filteredTransaksi.map((tr) => ({
+            "Kode Transaksi": tr.kode_transaksi || '-',
+            "Tanggal": new Date(tr.tanggal).toLocaleDateString('id-ID'),
+            "Kode Barang": tr.barang?.kode || '-',
+            "Nama Barang": tr.barang?.nama || '-',
+            "Jumlah": tr.jumlah,
+            "Satuan": tr.barang?.satuan?.nama || '-',
+            "Harga Satuan": tr.harga,
+            "Total Harga": (tr.jumlah || 0) * (tr.harga || 0),
+            "Pemasok": tr.pemasok || '-',
+            "Keterangan": tr.keterangan || '-'
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Barang Masuk");
+        XLSX.writeFile(workbook, `barang_masuk_${new Date().getTime()}.xlsx`);
+    };
+
+    const downloadExcelTemplate = () => {
+        const templateData = [
+            {
+                "Kode": "ATK-001",
+                "Nama Barang": "Kertas A4",
+                "Jumlah": 10,
+                "Harga": 50000,
+                "Tanggal": new Date().toISOString().split('T')[0],
+                "Pemasok": "PT ATK Sejahtera",
+                "Keterangan": "Stok bulanan"
+            }
+        ];
+
+        const worksheet = XLSX.utils.json_to_sheet(templateData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Template Import Masuk");
+        XLSX.writeFile(workbook, `template_import_masuk.xlsx`);
+    };
+
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -282,7 +324,7 @@ export default function BarangMasukPage() {
                     <h1 className="text-2xl font-bold text-gray-900">Barang Masuk</h1>
                     <p className="text-gray-500 text-sm mt-1">Catat dan pantau stok barang yang masuk</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                     <input 
                         type="file" 
                         accept=".xlsx, .xls" 
@@ -290,18 +332,86 @@ export default function BarangMasukPage() {
                         id="import-excel" 
                         onChange={handleFileUpload}
                     />
-                    <label
-                        htmlFor="import-excel"
-                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-sm shadow-blue-200 font-medium cursor-pointer"
-                    >
-                        Import Excel
-                    </label>
-                    <button
-                        onClick={exportToPDF}
-                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all shadow-sm shadow-red-200 font-medium"
-                    >
-                        Export PDF
-                    </button>
+                    <div className="relative">
+                        <button
+                            onClick={() => setIsImportDropdownOpen(!isImportDropdownOpen)}
+                            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-sm shadow-blue-200 font-medium"
+                        >
+                            Import Excel
+                            <ChevronDown className={`w-4 h-4 transition-transform ${isImportDropdownOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                        
+                        {isImportDropdownOpen && (
+                            <>
+                                <div 
+                                    className="fixed inset-0 z-10" 
+                                    onClick={() => setIsImportDropdownOpen(false)}
+                                />
+                                <div className="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-20 py-1 overflow-hidden animate-in fade-in zoom-in duration-150">
+                                    <button
+                                        onClick={() => {
+                                            document.getElementById('import-excel')?.click();
+                                            setIsImportDropdownOpen(false);
+                                        }}
+                                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors text-left"
+                                    >
+                                        Upload Excel
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            downloadExcelTemplate();
+                                            setIsImportDropdownOpen(false);
+                                        }}
+                                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors text-left"
+                                        title="Kolom: Kode (atau Nama Barang), Jumlah, Harga, Tanggal, Pemasok, Keterangan"
+                                    >
+                                        Download Template
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+
+                    {/* Export Dropdown */}
+                    <div className="relative">
+                        <button
+                            onClick={() => setIsExportDropdownOpen(!isExportDropdownOpen)}
+                            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all shadow-sm shadow-red-200 font-medium"
+                        >
+                            Export
+                            <ChevronDown className={`w-4 h-4 transition-transform ${isExportDropdownOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                        
+                        {isExportDropdownOpen && (
+                            <>
+                                <div 
+                                    className="fixed inset-0 z-10" 
+                                    onClick={() => setIsExportDropdownOpen(false)}
+                                />
+                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-20 py-1 overflow-hidden animate-in fade-in zoom-in duration-150">
+                                    <button
+                                        onClick={() => {
+                                            exportToPDF();
+                                            setIsExportDropdownOpen(false);
+                                        }}
+                                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors text-left"
+                                    >
+                                        Export PDF
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            exportToExcel();
+                                            setIsExportDropdownOpen(false);
+                                        }}
+                                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors text-left"
+                                    >
+                                        Export Excel
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+
                     <button
                         onClick={() => handleOpenModal()}
                         className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-sm shadow-blue-200 font-medium"

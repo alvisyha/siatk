@@ -14,7 +14,11 @@ import {
     Info,
     AlertCircle,
     Box,
-    Ban
+    Ban,
+    ChevronDown,
+    ArrowUpDown,
+    ArrowUp,
+    ArrowDown
 } from 'lucide-react';
 
 interface BarangItem {
@@ -51,6 +55,9 @@ export default function DataBarangPage() {
     const [itemToDelete, setItemToDelete] = useState<BarangItem | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [deleteMessage, setDeleteMessage] = useState('');
+    const [isExportDropdownOpen, setIsExportDropdownOpen] = useState(false);
+    const [isImportDropdownOpen, setIsImportDropdownOpen] = useState(false);
+    const [sortConfig, setSortConfig] = useState<{ key: keyof BarangItem | 'satuan.nama'; direction: 'asc' | 'desc' | null }>({ key: 'nama', direction: 'asc' });
     const fileInputRef = useState<HTMLInputElement | null>(null)[1];
     
     // work around for typing useRef
@@ -291,26 +298,35 @@ export default function DataBarangPage() {
         }
     };
 
+    const handleSort = (key: keyof BarangItem | 'satuan.nama') => {
+        let direction: 'asc' | 'desc' | null = 'asc';
+        if (sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        } else if (sortConfig.key === key && sortConfig.direction === 'desc') {
+            direction = null;
+        }
+        setSortConfig({ key, direction });
+    };
+
     const exportToPDF = () => {
         const doc = new jsPDF();
         
-        // Header
         doc.setFontSize(16);
-        doc.text('Data Master Barang', 14, 15);
+        doc.text('Laporan Data Barang', 14, 15);
         doc.setFontSize(10);
         doc.text(`Dicetak pada: ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`, 14, 22);
         
-        const tableColumn = ["No", "Kode", "Nama Barang", "Satuan", "Stok", "Stok Min.", "Status"];
+        const tableColumn = ["No", "Kode", "Nama Barang", "Satuan", "Stok", "Minimal", "Status"];
         const tableRows: any[] = [];
 
-        filteredBarang.forEach((item, index) => {
+        sortedBarang.forEach((item, index) => {
             const rowData = [
                 index + 1,
                 item.kode || '-',
                 item.nama,
                 item.satuan?.nama || '-',
-                item.stok.toString(),
-                item.stok_minimum.toString(),
+                item.stok,
+                item.stok_minimum,
                 item.status === true ? 'Aktif' : 'Nonaktif'
             ];
             tableRows.push(rowData);
@@ -326,6 +342,42 @@ export default function DataBarangPage() {
         });
 
         doc.save(`data_barang_${new Date().getTime()}.pdf`);
+    };
+
+    const exportToExcel = () => {
+        const worksheetData = sortedBarang.map((item, index) => ({
+            "No": index + 1,
+            "Kode": item.kode || '-',
+            "Nama Barang": item.nama,
+            "Satuan": item.satuan?.nama || '-',
+            "Stok": item.stok,
+            "Stok Minimal": item.stok_minimum,
+            "Status": item.status === true ? 'Aktif' : 'Nonaktif',
+            "Deskripsi": item.deskripsi || '-'
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Data Barang");
+        XLSX.writeFile(workbook, `data_barang_${new Date().getTime()}.xlsx`);
+    };
+
+    const downloadExcelTemplate = () => {
+        const templateData = [
+            {
+                "Kode": "ATK-001",
+                "Nama Barang": "Kertas A4",
+                "Satuan": "Rim",
+                "Stok Minimum": 5,
+                "Stok": 10,
+                "Deskripsi": "Kertas hvs 80gr"
+            }
+        ];
+
+        const worksheet = XLSX.utils.json_to_sheet(templateData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Template Import Barang");
+        XLSX.writeFile(workbook, `template_import_barang.xlsx`);
     };
 
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -371,13 +423,37 @@ export default function DataBarangPage() {
             const nameMatch = (item.nama || '').toLowerCase().includes(searchTerm.toLowerCase());
             const codeMatch = (item.kode || '').toLowerCase().includes(searchTerm.toLowerCase());
             return nameMatch || codeMatch;
-        })
-        .sort((a, b) => {
-            if (a.status !== b.status) {
-                return a.status ? -1 : 1;
-            }
-            return (a.nama || '').localeCompare(b.nama || '');
         });
+
+    const sortedBarang = [...filteredBarang].sort((a, b) => {
+        if (!sortConfig.direction || !sortConfig.key) {
+            // Default sort: status then name
+            if (a.status !== b.status) return a.status ? -1 : 1;
+            return (a.nama || '').localeCompare(b.nama || '', undefined, { numeric: true, sensitivity: 'base' });
+        }
+
+        let aValue: any;
+        let bValue: any;
+
+        if (sortConfig.key === 'satuan.nama') {
+            aValue = a.satuan?.nama || '';
+            bValue = b.satuan?.nama || '';
+        } else {
+            aValue = a[sortConfig.key as keyof BarangItem] ?? '';
+            bValue = b[sortConfig.key as keyof BarangItem] ?? '';
+        }
+
+        // Use localeCompare for strings (Natural Sort)
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+            const comparison = aValue.localeCompare(bValue, undefined, { numeric: true, sensitivity: 'base' });
+            return sortConfig.direction === 'asc' ? comparison : -comparison;
+        }
+
+        // Standard comparison for numbers/booleans
+        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+    });
 
     const getStokBadge = (item: BarangItem) => {
         if (item.stok <= 0) return 'bg-red-100 text-red-700';
@@ -393,7 +469,7 @@ export default function DataBarangPage() {
                     <h1 className="text-2xl font-bold text-gray-900">Data Barang</h1>
                     <p className="text-gray-500 text-sm mt-1">Kelola data master barang dan pantau stok</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                     <input 
                         type="file" 
                         accept=".xlsx, .xls" 
@@ -402,19 +478,86 @@ export default function DataBarangPage() {
                         onChange={handleFileUpload}
                     />
                     {isAdmin && (
-                        <label
-                            htmlFor="import-excel"
-                            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-sm shadow-blue-200 font-medium cursor-pointer"
-                        >
-                            Import Excel
-                        </label>
+                        <div className="relative">
+                            <button
+                                onClick={() => setIsImportDropdownOpen(!isImportDropdownOpen)}
+                                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-sm shadow-blue-200 font-medium"
+                            >
+                                Import Excel
+                                <ChevronDown className={`w-4 h-4 transition-transform ${isImportDropdownOpen ? 'rotate-180' : ''}`} />
+                            </button>
+                            
+                            {isImportDropdownOpen && (
+                                <>
+                                    <div 
+                                        className="fixed inset-0 z-10" 
+                                        onClick={() => setIsImportDropdownOpen(false)}
+                                    />
+                                    <div className="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-20 py-1 overflow-hidden animate-in fade-in zoom-in duration-150">
+                                        <button
+                                            onClick={() => {
+                                                document.getElementById('import-excel')?.click();
+                                                setIsImportDropdownOpen(false);
+                                            }}
+                                            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors text-left"
+                                        >
+                                            Upload Excel
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                downloadExcelTemplate();
+                                                setIsImportDropdownOpen(false);
+                                            }}
+                                            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors text-left"
+                                        >
+                                            Download Template
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+                        </div>
                     )}
-                    <button
-                        onClick={exportToPDF}
-                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all shadow-sm shadow-red-200 font-medium"
-                    >
-                        Export PDF
-                    </button>
+                    
+                    {/* Export Dropdown */}
+                    <div className="relative">
+                        <button
+                            onClick={() => setIsExportDropdownOpen(!isExportDropdownOpen)}
+                            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all shadow-sm shadow-red-200 font-medium"
+                        >
+                            Export
+                            <ChevronDown className={`w-4 h-4 transition-transform ${isExportDropdownOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                        
+                        {isExportDropdownOpen && (
+                            <>
+                                <div 
+                                    className="fixed inset-0 z-10" 
+                                    onClick={() => setIsExportDropdownOpen(false)}
+                                />
+                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-20 py-1 overflow-hidden animate-in fade-in zoom-in duration-150">
+                                    <button
+                                        onClick={() => {
+                                            exportToPDF();
+                                            setIsExportDropdownOpen(false);
+                                        }}
+                                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors text-left"
+                                    >
+                                        Export PDF
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            exportToExcel();
+                                            setIsExportDropdownOpen(false);
+                                        }}
+                                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors text-left"
+                                    >
+                                        Export Excel
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+
                     {isAdmin && (
                         <button
                             onClick={() => handleOpenModal()}
@@ -447,12 +590,72 @@ export default function DataBarangPage() {
                         <thead className="bg-gray-50 text-gray-600 font-medium border-b border-gray-200">
                             <tr>
                                 <th className="px-4 py-4 text-center w-14">No</th>
-                                <th className="px-4 py-4">Kode</th>
-                                <th className="px-6 py-4">Nama Barang</th>
-                                <th className="px-4 py-4">Satuan</th>
-                                <th className="px-4 py-4 text-center">Stok</th>
-                                <th className="px-4 py-4 text-center">Stok Min.</th>
-                                <th className="px-4 py-4 text-center">Status</th>
+                                <th 
+                                    className="px-4 py-4 cursor-pointer hover:bg-gray-100 transition-colors"
+                                    onClick={() => handleSort('kode')}
+                                >
+                                    <div className="flex items-center gap-1">
+                                        Kode
+                                        {sortConfig.key === 'kode' && sortConfig.direction ? (
+                                            sortConfig.direction === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
+                                        ) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
+                                    </div>
+                                </th>
+                                <th 
+                                    className="px-6 py-4 cursor-pointer hover:bg-gray-100 transition-colors"
+                                    onClick={() => handleSort('nama')}
+                                >
+                                    <div className="flex items-center gap-1">
+                                        Nama Barang
+                                        {sortConfig.key === 'nama' && sortConfig.direction ? (
+                                            sortConfig.direction === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
+                                        ) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
+                                    </div>
+                                </th>
+                                <th 
+                                    className="px-4 py-4 cursor-pointer hover:bg-gray-100 transition-colors"
+                                    onClick={() => handleSort('satuan.nama')}
+                                >
+                                    <div className="flex items-center gap-1">
+                                        Satuan
+                                        {sortConfig.key === 'satuan.nama' && sortConfig.direction ? (
+                                            sortConfig.direction === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
+                                        ) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
+                                    </div>
+                                </th>
+                                <th 
+                                    className="px-4 py-4 text-center cursor-pointer hover:bg-gray-100 transition-colors"
+                                    onClick={() => handleSort('stok')}
+                                >
+                                    <div className="flex items-center justify-center gap-1">
+                                        Stok
+                                        {sortConfig.key === 'stok' && sortConfig.direction ? (
+                                            sortConfig.direction === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
+                                        ) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
+                                    </div>
+                                </th>
+                                <th 
+                                    className="px-4 py-4 text-center cursor-pointer hover:bg-gray-100 transition-colors"
+                                    onClick={() => handleSort('stok_minimum')}
+                                >
+                                    <div className="flex items-center justify-center gap-1">
+                                        Stok Min.
+                                        {sortConfig.key === 'stok_minimum' && sortConfig.direction ? (
+                                            sortConfig.direction === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
+                                        ) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
+                                    </div>
+                                </th>
+                                <th 
+                                    className="px-4 py-4 text-center cursor-pointer hover:bg-gray-100 transition-colors"
+                                    onClick={() => handleSort('status')}
+                                >
+                                    <div className="flex items-center justify-center gap-1">
+                                        Status
+                                        {sortConfig.key === 'status' && sortConfig.direction ? (
+                                            sortConfig.direction === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
+                                        ) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
+                                    </div>
+                                </th>
                                 {isAdmin && <th className="px-4 py-4 text-center w-24">Aksi</th>}
                             </tr>
                         </thead>
@@ -470,11 +673,11 @@ export default function DataBarangPage() {
                                         <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
                                             <Info className="w-6 h-6 text-gray-400" />
                                         </div>
-                                        <p>Tidak ada data barang.</p>
+                                        <p>Data barang kosong.</p>
                                     </td>
                                 </tr>
                             ) : (
-                                filteredBarang.map((item, index) => (
+                                sortedBarang.map((item, index) => (
                                     <tr key={item.id} className={`hover:bg-gray-50/50 transition-colors ${item.status === false ? 'opacity-50 bg-gray-100' : ''}`}>
                                         <td className="px-4 py-4 text-center text-gray-500">{index + 1}</td>
                                         <td className="px-4 py-4 font-mono text-xs text-blue-600 font-semibold">{item.kode || '-'}</td>
@@ -571,10 +774,14 @@ export default function DataBarangPage() {
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Kode Barang</label>
                                     <input
                                         type="text"
+                                        readOnly={!!editingItem}
                                         value={formData.kode}
                                         onChange={e => setFormData({ ...formData, kode: e.target.value })}
-                                        className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className={`w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                            editingItem ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-gray-50'
+                                        }`}
                                         placeholder="Otomatis (ATK-XXX)"
+                                        title={editingItem ? 'Kode barang tidak dapat diubah setelah dibuat' : 'Kode barang otomatis atau manual'}
                                     />
                                 </div>
                                 <div>
