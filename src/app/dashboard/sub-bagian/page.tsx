@@ -142,16 +142,17 @@ export default function SubBagianPage() {
 
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
+        <div className="space-y-6">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Master Sub Bagian</h1>
-                    <p className="text-gray-500 text-sm mt-1">Kelola data sub bagian organisasi</p>
+                    <h1 className="text-xl font-bold" style={{color:'var(--text-primary)'}}>Master Sub Bagian</h1>
+                    <p className="text-sm mt-1" style={{color:'var(--text-secondary)'}}>Kelola data sub bagian organisasi</p>
                 </div>
                 <button
                     onClick={() => handleOpenModal()}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-sm shadow-blue-200 font-medium"
+                    className="flex items-center gap-2 px-3.5 py-2 text-sm font-medium rounded-lg"
+                    style={{background:'var(--primary)',color:'#fff',boxShadow:'0 2px 8px rgba(99,102,241,0.25)',border:'none',cursor:'pointer'}}
                 >
                     <Plus className="w-4 h-4" />
                     Tambah Sub Bagian
@@ -159,79 +160,59 @@ export default function SubBagianPage() {
             </div>
 
             {/* Table Card */}
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden text-gray-900">
-                <div className="p-4 border-b border-gray-100 bg-gray-50/30 flex flex-col sm:flex-row gap-4">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
+            <div className="rounded-xl overflow-hidden" style={{background:'var(--surface)',border:'1px solid var(--border)',boxShadow:'var(--shadow-sm)'}}>
+                <div className="p-4 flex flex-col sm:flex-row gap-3" style={{borderBottom:'1px solid var(--border)',background:'var(--bg)'}}>
+                    <div className="relative flex-1 max-w-sm">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{color:'var(--text-muted)'}} />
                         <input
                             type="text"
                             placeholder="Cari sub bagian..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                            className="w-full pl-9 pr-4 py-2 text-sm rounded-lg outline-none"
+                            style={{border:'1.5px solid var(--border)',background:'var(--surface)',color:'var(--text-primary)'}}
+                            onFocus={e=>{e.currentTarget.style.borderColor='var(--primary)';e.currentTarget.style.boxShadow='0 0 0 3px rgba(99,102,241,0.1)';}}
+                            onBlur={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.boxShadow='none';}}
                         />
                     </div>
                 </div>
 
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                        <thead className="bg-gray-50 text-gray-600 font-medium border-b border-gray-200">
+                        <thead style={{background:'var(--bg)',borderBottom:'1px solid var(--border)'}}>
                             <tr>
-                                <th className="px-6 py-4">Nama Sub Bagian</th>
-                                <th className="px-6 py-4">Deskripsi</th>
-                                <th className="px-6 py-4 text-right">Aksi</th>
+                                <th className="px-5 py-3" style={{fontSize:'12px',fontWeight:600,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.05em'}}>Nama Sub Bagian</th>
+                                <th className="px-5 py-3" style={{fontSize:'12px',fontWeight:600,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.05em'}}>Deskripsi</th>
+                                <th className="px-5 py-3 text-center w-24" style={{fontSize:'12px',fontWeight:600,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.05em'}}>Aksi</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-200">
+                        <tbody>
                             {isLoading ? (
-                                <tr>
-                                    <td colSpan={3} className="px-6 py-10 text-center text-gray-500">
-                                        <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3 text-blue-500" />
-                                        <p>Memuat data sub bagian...</p>
-                                    </td>
-                                </tr>
+                                <tr><td colSpan={3} className="py-14 text-center" style={{color:'var(--text-muted)'}}>
+                                    <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" style={{color:'var(--primary)'}} />
+                                    <p className="text-sm">Memuat data...</p>
+                                </td></tr>
                             ) : filteredSubBagian.length === 0 ? (
-                                <tr>
-                                    <td colSpan={3} className="px-6 py-10 text-center text-gray-500">
-                                        <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                                            <Info className="w-6 h-6 text-gray-400" />
-                                        </div>
-                                        <p>Tidak ada data sub bagian.</p>
-                                    </td>
-                                </tr>
+                                <tr><td colSpan={3} className="py-14 text-center" style={{color:'var(--text-muted)'}}>
+                                    <Info className="w-7 h-7 mx-auto mb-2" />
+                                    <p className="text-sm">Tidak ada data sub bagian.</p>
+                                </td></tr>
                             ) : (
                                 filteredSubBagian.map((item) => (
-                                    <tr key={item.id} className="hover:bg-gray-50/50 transition-colors group">
-                                        <td className="px-6 py-4">
+                                    <tr key={item.id} className="transition-colors" style={{borderTop:'1px solid var(--border)'}} onMouseEnter={e=>(e.currentTarget.style.background='var(--bg)')} onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
+                                        <td className="px-5 py-3.5">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
-                                                    <Briefcase className="w-4 h-4" />
+                                                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{background:'var(--primary-light)'}}>
+                                                    <Briefcase className="w-4 h-4" style={{color:'var(--primary)'}} />
                                                 </div>
-                                                <span className="font-medium text-gray-900">{item.nama}</span>
+                                                <span className="font-medium text-sm" style={{color:'var(--text-primary)'}}>{item.nama}</span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 font-medium text-gray-700">
-                                            {/* Pagu column removed */}
-                                        </td>
-                                        <td className="px-6 py-4 text-gray-600">
-                                            {item.deskripsi || '-'}
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button
-                                                    onClick={() => handleOpenModal(item)}
-                                                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                                                    title="Edit"
-                                                >
-                                                    <Edit className="w-4 h-4" />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDeleteClick(item)}
-                                                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                                                    title="Hapus"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
+                                        <td className="px-5 py-3.5 text-sm" style={{color:'var(--text-secondary)'}}>{item.deskripsi || <span style={{color:'var(--text-muted)'}}>—</span>}</td>
+                                        <td className="px-5 py-3.5">
+                                            <div className="flex items-center justify-center gap-1">
+                                                <button onClick={() => handleOpenModal(item)} title="Edit" className="p-1.5 rounded-lg transition-all" style={{color:'var(--text-muted)',background:'transparent',border:'none',cursor:'pointer'}} onMouseEnter={e=>{(e.currentTarget as any).style.background='var(--primary-light)';(e.currentTarget as any).style.color='var(--primary)';}} onMouseLeave={e=>{(e.currentTarget as any).style.background='transparent';(e.currentTarget as any).style.color='var(--text-muted)';}}>  <Edit className="w-4 h-4" /></button>
+                                                <button onClick={() => handleDeleteClick(item)} title="Hapus" className="p-1.5 rounded-lg transition-all" style={{color:'var(--text-muted)',background:'transparent',border:'none',cursor:'pointer'}} onMouseEnter={e=>{(e.currentTarget as any).style.background='var(--danger-light)';(e.currentTarget as any).style.color='var(--danger)';}} onMouseLeave={e=>{(e.currentTarget as any).style.background='transparent';(e.currentTarget as any).style.color='var(--text-muted)';}}>  <Trash2 className="w-4 h-4" /></button>
                                             </div>
                                         </td>
                                     </tr>
@@ -244,59 +225,29 @@ export default function SubBagianPage() {
 
             {/* Modal Add/Edit */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in duration-300">
-                        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white">
-                            <h3 className="text-lg font-semibold text-gray-900">
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pt-16 md:pt-4 pointer-events-none">
+                    <div className="w-full max-w-md overflow-hidden animate-scale-in pointer-events-auto" style={{background:'var(--surface)',borderRadius:'16px',boxShadow:'var(--shadow-lg)',border:'1px solid var(--border)'}}>
+                        <div className="px-6 py-4 flex items-center justify-between" style={{borderBottom:'1px solid var(--border)'}}>
+                            <h3 className="text-base font-bold" style={{color:'var(--text-primary)'}}>
                                 {editingSubBagian ? 'Edit Sub Bagian' : 'Tambah Sub Bagian'}
                             </h3>
-                            <button onClick={handleCloseModal} className="text-gray-400 hover:text-gray-600 transition-colors p-1">
-                                <X className="w-5 h-5" />
+                            <button onClick={handleCloseModal} className="p-1.5 rounded-lg transition-colors" style={{background:'transparent',border:'none',cursor:'pointer',color:'var(--text-muted)'}} onMouseEnter={e=>(e.currentTarget.style.background='var(--bg)')} onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
+                                <X className="w-4 h-4" />
                             </button>
                         </div>
-                        <form onSubmit={handleSave} className="p-6 space-y-5">
+                        <form onSubmit={handleSave} className="p-6 space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1.5">Nama Sub Bagian</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={formData.nama}
-                                    onChange={e => setFormData({ ...formData, nama: e.target.value })}
-                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                    placeholder="Contoh: Kepegawaian, Keuangan, Tata Usaha"
-                                />
+                                <label className="block text-xs font-semibold mb-1.5" style={{color:'var(--text-primary)'}}>Nama Sub Bagian <span style={{color:'var(--danger)'}}>*</span></label>
+                                <input type="text" required value={formData.nama} onChange={e=>setFormData({...formData,nama:e.target.value})} className="w-full px-3 py-2.5 text-sm rounded-lg outline-none transition-all" style={{border:'1.5px solid var(--border)',background:'var(--bg)',color:'var(--text-primary)',fontFamily:'inherit'}} placeholder="Contoh: Kepegawaian, Keuangan, Tata Usaha" onFocus={e=>{e.currentTarget.style.borderColor='var(--primary)';e.currentTarget.style.boxShadow='0 0 0 3px rgba(99,102,241,0.1)';}} onBlur={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.boxShadow='none';}} />
                             </div>
-
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1.5">Deskripsi (Opsional)</label>
-                                <textarea
-                                    value={formData.deskripsi}
-                                    onChange={e => setFormData({ ...formData, deskripsi: e.target.value })}
-                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all min-h-[100px]"
-                                    placeholder="Keterangan mengenai sub bagian ini..."
-                                />
+                                <label className="block text-xs font-semibold mb-1.5" style={{color:'var(--text-primary)'}}>Deskripsi <span style={{color:'var(--text-muted)',fontWeight:400}}>(opsional)</span></label>
+                                <textarea value={formData.deskripsi} onChange={e=>setFormData({...formData,deskripsi:e.target.value})} rows={3} className="w-full px-3 py-2.5 text-sm rounded-lg outline-none transition-all resize-none" style={{border:'1.5px solid var(--border)',background:'var(--bg)',color:'var(--text-primary)',fontFamily:'inherit'}} placeholder="Keterangan mengenai sub bagian ini..." onFocus={e=>{e.currentTarget.style.borderColor='var(--primary)';e.currentTarget.style.boxShadow='0 0 0 3px rgba(99,102,241,0.1)';}} onBlur={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.boxShadow='none';}} />
                             </div>
-                            <div className="flex items-center gap-3 pt-2">
-                                <button
-                                    type="button"
-                                    onClick={handleCloseModal}
-                                    className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium"
-                                >
-                                    Batal
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={isSaving}
-                                    className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-sm shadow-blue-100 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                >
-                                    {isSaving ? (
-                                        <>
-                                            <Loader2 className="w-4 h-4 animate-spin" />
-                                            Menyimpan...
-                                        </>
-                                    ) : (
-                                        'Simpan'
-                                    )}
+                            <div className="flex gap-2 pt-2" style={{borderTop:'1px solid var(--border)'}}>
+                                <button type="button" onClick={handleCloseModal} className="flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-all" style={{background:'var(--bg)',color:'var(--text-secondary)',border:'1px solid var(--border)',cursor:'pointer'}} onMouseEnter={e=>(e.currentTarget.style.background='var(--border)')} onMouseLeave={e=>(e.currentTarget.style.background='var(--bg)')}>Batal</button>
+                                <button type="submit" disabled={isSaving} className="flex-1 px-4 py-2 text-sm font-medium rounded-lg flex items-center justify-center gap-2" style={{background:isSaving?'#a5b4fc':'var(--primary)',color:'#fff',border:'none',cursor:isSaving?'not-allowed':'pointer'}}>
+                                    {isSaving?<><Loader2 className="w-4 h-4 animate-spin"/>Menyimpan...</>:'Simpan'}
                                 </button>
                             </div>
                         </form>
@@ -306,28 +257,19 @@ export default function SubBagianPage() {
 
             {/* Modal Delete */}
             {isDeleteModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 animate-in zoom-in duration-300">
-                        <div className="w-12 h-12 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <AlertCircle className="w-6 h-6" />
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pt-16 md:pt-4 pointer-events-none">
+                    <div className="w-full max-w-sm p-6 text-center animate-scale-in pointer-events-auto" style={{background:'var(--surface)',borderRadius:'16px',boxShadow:'var(--shadow-lg)',border:'1px solid var(--border)'}}>
+                        <div className="w-11 h-11 rounded-full flex items-center justify-center mx-auto mb-4" style={{background:'var(--danger-light)'}}>
+                            <AlertCircle className="w-5 h-5" style={{color:'var(--danger)'}} />
                         </div>
-                        <h3 className="text-lg font-bold text-gray-900 text-center mb-2">Hapus Sub Bagian?</h3>
-                        <p className="text-gray-500 text-center text-sm mb-6">
-                            Apakah Anda yakin ingin menghapus sub bagian <span className="font-semibold text-gray-900">"{subBagianToDelete?.nama}"</span>? Tindakan ini tidak dapat dibatalkan.
+                        <h3 className="text-base font-bold mb-2" style={{color:'var(--text-primary)'}}>Hapus Sub Bagian?</h3>
+                        <p className="text-sm mb-5" style={{color:'var(--text-secondary)'}}>
+                            Yakin hapus <span className="font-semibold" style={{color:'var(--text-primary)'}}>"{subBagianToDelete?.nama}"</span>? Tindakan ini tidak dapat dibatalkan.
                         </p>
-                        <div className="flex flex-col gap-2">
-                            <button
-                                onClick={handleDeleteConfirm}
-                                disabled={isSaving}
-                                className="w-full py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all font-medium flex items-center justify-center gap-2"
-                            >
-                                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Ya, Hapus'}
-                            </button>
-                            <button
-                                onClick={() => setIsDeleteModalOpen(false)}
-                                className="w-full py-2.5 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium"
-                            >
-                                Batal
+                        <div className="flex gap-2">
+                            <button onClick={()=>setIsDeleteModalOpen(false)} className="flex-1 py-2 text-sm font-medium rounded-lg" style={{background:'var(--bg)',color:'var(--text-secondary)',border:'1px solid var(--border)',cursor:'pointer'}} onMouseEnter={e=>(e.currentTarget.style.background='var(--border)')} onMouseLeave={e=>(e.currentTarget.style.background='var(--bg)')}>Batal</button>
+                            <button onClick={handleDeleteConfirm} disabled={isSaving} className="flex-1 py-2 text-sm font-medium rounded-lg flex items-center justify-center gap-2" style={{background:isSaving?'#fca5a5':'var(--danger)',color:'#fff',border:'none',cursor:isSaving?'not-allowed':'pointer'}}>
+                                {isSaving?<Loader2 className="w-4 h-4 animate-spin"/>:'Ya, Hapus'}
                             </button>
                         </div>
                     </div>

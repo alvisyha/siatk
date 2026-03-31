@@ -14,7 +14,8 @@ import {
     CheckCircle2,
     XCircle,
     Clock,
-    Filter
+    Filter,
+    Calendar
 } from 'lucide-react';
 
 interface Barang {
@@ -263,56 +264,39 @@ export default function PermintaanBarangPage() {
     };
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
-            {/* Header */}
+        <>
+            <div className="space-y-6 animate-fade-in">
+                {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Permintaan Barang</h1>
-                    <p className="text-gray-500 text-sm mt-1">Ajukan dan pantau permintaan Alat Tulis Kantor</p>
+                    <h1 className="text-xl font-bold" style={{color:'var(--text-primary)'}}>Permintaan Barang</h1>
+                    <p className="text-sm mt-1" style={{color:'var(--text-secondary)'}}>Ajukan dan pantau permintaan Alat Tulis Kantor</p>
                 </div>
                 <div className="flex gap-2">
-                    <button
-                        onClick={exportToPDF}
-                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all shadow-sm shadow-red-200 font-medium"
-                    >
+                    <button onClick={exportToPDF} className="flex items-center gap-2 px-3.5 py-2 text-sm font-medium rounded-lg" style={{background:'var(--danger)',color:'#fff',border:'none',cursor:'pointer',boxShadow:'0 2px 8px rgba(239,68,68,0.2)'}}>
                         Export PDF
                     </button>
                     {userRole === 'user' && (
-                        <button
-                            onClick={() => setIsModalOpen(true)}
-                            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-sm shadow-blue-200 font-medium"
-                        >
-                            <Plus className="w-4 h-4" />
-                            Buat Pengajuan
+                        <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 px-3.5 py-2 text-sm font-medium rounded-lg" style={{background:'var(--primary)',color:'#fff',border:'none',cursor:'pointer',boxShadow:'0 2px 8px rgba(99,102,241,0.25)'}}>
+                            <Plus className="w-4 h-4" /> Buat Pengajuan
                         </button>
                     )}
                 </div>
             </div>
 
             {/* Table Card */}
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden text-gray-900">
-                <div className="p-4 border-b border-gray-100 bg-gray-50/30">
+            <div className="rounded-xl overflow-hidden" style={{background:'var(--surface)',border:'1px solid var(--border)',boxShadow:'var(--shadow-sm)'}}>
+                <div className="p-4" style={{borderBottom:'1px solid var(--border)',background:'var(--bg)'}}>
                     <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-                        <div className="relative w-full max-w-md">
-                            <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
-                            <input
-                                type="text"
-                                placeholder="Cari barang atau pemohon..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-gray-900"
-                            />
+                        <div className="relative w-full max-w-sm">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{color:'var(--text-muted)'}} />
+                            <input type="text" placeholder="Cari barang atau pemohon..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-9 pr-4 py-2 text-sm rounded-lg outline-none" style={{border:'1.5px solid var(--border)',background:'var(--surface)',color:'var(--text-primary)'}} onFocus={e=>{e.currentTarget.style.borderColor='var(--primary)';e.currentTarget.style.boxShadow='0 0 0 3px rgba(99,102,241,0.1)';}} onBlur={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.boxShadow='none';}} />
                         </div>
-
                         <div className="flex items-center gap-3 w-full md:w-auto">
-                            <label className="text-sm font-medium text-gray-600 flex items-center gap-2 whitespace-nowrap">
+                            <label className="text-sm font-medium flex items-center gap-2 whitespace-nowrap" style={{color:'var(--text-secondary)'}}>
                                 <Filter className="w-4 h-4" /> Filter Status:
                             </label>
-                            <select
-                                value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value)}
-                                className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-gray-900 min-w-[140px]"
-                            >
+                            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="rounded-lg px-3 py-2 text-sm outline-none font-medium" style={{background:'var(--surface)',border:'1.5px solid var(--border)',color:'var(--text-primary)'}} onFocus={e=>{e.currentTarget.style.borderColor='var(--primary)';e.currentTarget.style.boxShadow='0 0 0 3px rgba(99,102,241,0.1)';}} onBlur={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.boxShadow='none';}}>
                                 <option value="semua">Semua Status</option>
                                 <option value="pending">⏳ Pending</option>
                                 <option value="disetujui">✅ Disetujui</option>
@@ -324,180 +308,104 @@ export default function PermintaanBarangPage() {
 
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                        <thead className="bg-gray-50 text-gray-600 font-medium border-b border-gray-200">
+                        <thead style={{background:'var(--bg)',borderBottom:'1px solid var(--border)'}}>
                             <tr>
-                                <th className="px-6 py-4">No</th>
-                                <th className="px-6 py-4">Pemohon</th>
-                                <th className="px-6 py-4">Sub Bagian</th>
-                                <th className="px-6 py-4">Tanggal</th>
-                                <th className="px-6 py-4 w-[30%]">Barang</th>
-                                <th className="px-6 py-4 text-center">Jumlah</th>
-                                <th className="px-6 py-4">Satuan</th>
-                                <th className="px-6 py-4">Status</th>
-                                <th className="px-6 py-4">Keterangan</th>
-                                {userRole === 'admin' && <th className="px-6 py-4 text-center">Aksi</th>}
+                                <th className="px-4 py-3" style={{fontSize:'12px',fontWeight:600,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.05em'}}>No</th>
+                                <th className="px-4 py-3" style={{fontSize:'12px',fontWeight:600,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.05em'}}>Pemohon</th>
+                                <th className="px-4 py-3" style={{fontSize:'12px',fontWeight:600,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.05em'}}>Sub Bagian</th>
+                                <th className="px-4 py-3" style={{fontSize:'12px',fontWeight:600,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.05em'}}>Tanggal</th>
+                                <th className="px-4 py-3 w-[30%]" style={{fontSize:'12px',fontWeight:600,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.05em'}}>Barang</th>
+                                <th className="px-4 py-3 text-center" style={{fontSize:'12px',fontWeight:600,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.05em'}}>Jumlah</th>
+                                <th className="px-4 py-3" style={{fontSize:'12px',fontWeight:600,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.05em'}}>Satuan</th>
+                                <th className="px-4 py-3" style={{fontSize:'12px',fontWeight:600,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.05em'}}>Status</th>
+                                <th className="px-4 py-3" style={{fontSize:'12px',fontWeight:600,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.05em'}}>Keterangan</th>
+                                {userRole === 'admin' && <th className="px-4 py-3 text-center" style={{fontSize:'12px',fontWeight:600,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.05em'}}>Aksi</th>}
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-200">
-                            {isLoading ? (
-                                <tr>
-                                    <td colSpan={10} className="px-6 py-10 text-center text-gray-500">
-                                        <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3 text-blue-500" />
-                                        <p>Memuat data permintaan...</p>
-                                    </td>
+                        <tbody>
+                            {isLoading ? (<tr><td colSpan={10} className="py-14 text-center" style={{color:'var(--text-muted)'}}><Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" style={{color:'var(--primary)'}} /><p className="text-sm">Memuat data...</p></td></tr>
+                            ) : filteredRequests.length === 0 ? (<tr><td colSpan={10} className="py-14 text-center" style={{color:'var(--text-muted)'}}><Info className="w-7 h-7 mx-auto mb-2" /><p className="text-sm">Belum ada pengajuan permintaan.</p></td></tr>
+                            ) : filteredRequests.map((item, index) => (
+                                <tr key={item.id} className="transition-colors" style={{borderTop:'1px solid var(--border)'}} onMouseEnter={e=>(e.currentTarget.style.background='var(--bg)')} onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
+                                    <td className="px-4 py-3.5 text-xs font-semibold" style={{color:'var(--text-muted)'}}>{index + 1}</td>
+                                    <td className="px-4 py-3.5 font-medium" style={{color:'var(--text-primary)'}}>{item.pemohon || '-'}</td>
+                                    <td className="px-4 py-3.5" style={{color:'var(--text-secondary)'}}>{item.sub_bagian?.nama || '-'}</td>
+                                    <td className="px-4 py-3.5 text-sm" style={{color:'var(--text-secondary)'}}>{new Date(item.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                                    <td className="px-4 py-3.5"><div className="font-medium text-sm" style={{color:'var(--text-primary)'}}>{item.barang?.nama}</div><div className="text-xs font-mono" style={{color:'var(--text-muted)'}}>{item.barang?.kode || '-'}</div></td>
+                                    <td className="px-4 py-3.5 text-center font-bold" style={{color:'var(--text-primary)'}}>{item.jumlah}</td>
+                                    <td className="px-4 py-3.5" style={{color:'var(--text-secondary)'}}>{item.barang?.satuan?.nama || '-'}</td>
+                                    <td className="px-4 py-3.5"><span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${item.status === 'disetujui' ? 'bg-emerald-100 text-emerald-700' : item.status === 'ditolak' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>{item.status === 'pending' && <Clock className="w-3 h-3" />}{item.status === 'disetujui' && <CheckCircle2 className="w-3 h-3" />}{item.status === 'ditolak' && <XCircle className="w-3 h-3" />}{item.status}</span></td>
+                                    <td className="px-4 py-3.5 text-xs max-w-[150px] truncate" style={{color:'var(--text-secondary)'}} title={item.keterangan || ''}>{item.keterangan || '-'}</td>
+                                    {userRole === 'admin' && (
+                                        <td className="px-4 py-3.5 text-center">
+                                            {item.status === 'pending' ? (
+                                                <div className="flex items-center justify-center gap-1">
+                                                    <button onClick={() => handleOpenApproveModal(item)} className="px-3 py-1.5 text-xs font-medium rounded-md shadow-sm" style={{background:'var(--teal)',color:'#fff',border:'none',cursor:'pointer'}} onMouseEnter={e=>(e.currentTarget.style.background='var(--teal-light)',e.currentTarget.style.color='var(--teal)')} onMouseLeave={e=>(e.currentTarget.style.background='var(--teal)',e.currentTarget.style.color='#fff')}>Setujui</button>
+                                                    <button onClick={() => handleUpdateStatus(item.id, 'ditolak')} className="px-3 py-1.5 text-xs font-medium rounded-md shadow-sm" style={{background:'var(--danger)',color:'#fff',border:'none',cursor:'pointer'}} onMouseEnter={e=>(e.currentTarget.style.background='var(--danger-light)',e.currentTarget.style.color='var(--danger)')} onMouseLeave={e=>(e.currentTarget.style.background='var(--danger)',e.currentTarget.style.color='#fff')}>Tolak</button>
+                                                </div>
+                                            ) : (
+                                                <span className="text-xs italic" style={{color:'var(--text-muted)'}}>Selesai</span>
+                                            )}
+                                        </td>
+                                    )}
                                 </tr>
-                            ) : filteredRequests.length === 0 ? (
-                                <tr>
-                                    <td colSpan={9} className="px-6 py-10 text-center text-gray-500">
-                                        <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                                            <Info className="w-6 h-6 text-gray-400" />
-                                        </div>
-                                        <p>Belum ada pengajuan permintaan.</p>
-                                    </td>
-                                </tr>
-                            ) : (
-                                filteredRequests.map((item, index) => (
-                                    <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
-                                        <td className="px-6 py-4 text-gray-500">{index + 1}</td>
-                                        <td className="px-6 py-4 font-medium text-gray-900">{item.pemohon || '-'}</td>
-                                        <td className="px-6 py-4 text-gray-600">{item.sub_bagian?.nama || '-'}</td>
-                                        <td className="px-6 py-4 text-gray-700">
-                                            {new Date(item.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="font-medium text-gray-900">{item.barang?.nama}</div>
-                                            <div className="text-xs text-gray-500 font-mono">{item.barang?.kode || '-'}</div>
-                                        </td>
-                                        <td className="px-6 py-4 text-center font-bold text-gray-900">{item.jumlah}</td>
-                                        <td className="px-6 py-4 text-gray-600">{item.barang?.satuan?.nama || '-'}</td>
-                                        <td className="px-6 py-4">
-                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${getStatusStyle(item.status)}`}>
-                                                {item.status === 'pending' && <Clock className="w-3 h-3" />}
-                                                {item.status === 'disetujui' && <CheckCircle2 className="w-3 h-3" />}
-                                                {item.status === 'ditolak' && <XCircle className="w-3 h-3" />}
-                                                {item.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-gray-500 text-xs max-w-[150px] truncate">{item.keterangan || '-'}</td>
-                                        {userRole === 'admin' && (
-                                            <td className="px-6 py-4 text-center">
-                                                {item.status === 'pending' ? (
-                                                    <div className="flex items-center justify-center gap-2">
-                                                        <button
-                                                            onClick={() => handleOpenApproveModal(item)}
-                                                            className="px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-all"
-                                                        >
-                                                            Setujui
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleUpdateStatus(item.id, 'ditolak')}
-                                                            className="px-3 py-1.5 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-all"
-                                                        >
-                                                            Tolak
-                                                        </button>
-                                                    </div>
-                                                ) : (
-                                                    <span className="text-gray-400 text-xs italic">Selesai</span>
-                                                )}
-                                            </td>
-                                        )}
-                                    </tr>
-                                ))
-                            )}
+                            ))}
                         </tbody>
                     </table>
                 </div>
             </div>
+            
+            </div>
 
             {/* Modal Create Request */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in duration-300">
-                        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white text-gray-900">
-                            <h3 className="text-lg font-semibold">Buat Pengajuan Permintaan</h3>
-                            <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors p-1">
-                                <X className="w-5 h-5" />
-                            </button>
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pt-16 md:pt-4 pointer-events-none">
+                    <div className="w-full max-w-md overflow-hidden animate-scale-in pointer-events-auto" style={{background:'var(--surface)',borderRadius:'16px',boxShadow:'var(--shadow-lg)',border:'1px solid var(--border)'}}>
+                        <div className="px-6 py-4 flex items-center justify-between" style={{borderBottom:'1px solid var(--border)'}}>
+                            <h3 className="text-base font-bold flex items-center gap-2" style={{color:'var(--text-primary)'}}>
+                                <Plus className="w-4 h-4" style={{color:'var(--primary)'}} /> Buat Pengajuan
+                            </h3>
+                            <button onClick={() => setIsModalOpen(false)} className="p-1.5 rounded-lg" style={{background:'transparent',border:'none',cursor:'pointer',color:'var(--text-muted)'}} onMouseEnter={e=>(e.currentTarget.style.background='var(--bg)')} onMouseLeave={e=>(e.currentTarget.style.background='transparent')}><X className="w-4 h-4" /></button>
                         </div>
                         <form onSubmit={handleSave} className="p-6 space-y-4">
                             {userRole === 'admin' && (
                                 <>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Pemohon</label>
-                                        <input
-                                            type="text"
-                                            required
-                                            value={formData.pemohon}
-                                            onChange={e => setFormData({ ...formData, pemohon: e.target.value })}
-                                            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                                            placeholder="Nama pemohon..."
-                                        />
+                                        <label className="block text-xs font-semibold mb-1.5" style={{color:'var(--text-primary)'}}>Pemohon</label>
+                                        <input type="text" required value={formData.pemohon} onChange={e => setFormData({ ...formData, pemohon: e.target.value })} className="w-full px-3 py-2.5 text-sm rounded-lg outline-none" style={{border:'1.5px solid var(--border)',background:'var(--bg)',color:'var(--text-primary)',fontFamily:'inherit'}} onFocus={e=>{e.currentTarget.style.borderColor='var(--primary)';e.currentTarget.style.boxShadow='0 0 0 3px rgba(99,102,241,0.1)';}} onBlur={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.boxShadow='none';}} placeholder="Nama pemohon..." />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Sub Bagian</label>
-                                        <select
-                                            required
-                                            value={formData.sub_bagian_id}
-                                            onChange={e => setFormData({ ...formData, sub_bagian_id: e.target.value })}
-                                            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-none"
-                                        >
+                                        <label className="block text-xs font-semibold mb-1.5" style={{color:'var(--text-primary)'}}>Sub Bagian</label>
+                                        <select required value={formData.sub_bagian_id} onChange={e => setFormData({ ...formData, sub_bagian_id: e.target.value })} className="w-full px-3 py-2.5 text-sm rounded-lg outline-none" style={{border:'1.5px solid var(--border)',background:'var(--bg)',color:'var(--text-primary)',fontFamily:'inherit'}} onFocus={e=>{e.currentTarget.style.borderColor='var(--primary)';e.currentTarget.style.boxShadow='0 0 0 3px rgba(99,102,241,0.1)';}} onBlur={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.boxShadow='none';}}>
                                             <option value="">-- Pilih Sub Bagian --</option>
-                                            {subBagianList.map(sb => (
-                                                <option key={sb.id} value={sb.id}>{sb.nama}</option>
-                                            ))}
+                                            {subBagianList.map(sb => (<option key={sb.id} value={sb.id}>{sb.nama}</option>))}
                                         </select>
                                     </div>
                                 </>
                             )}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1.5">Pilih Barang</label>
-                                <select
-                                    required
-                                    value={formData.barang_id}
-                                    onChange={e => setFormData({ ...formData, barang_id: e.target.value })}
-                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-none"
-                                >
+                                <label className="block text-xs font-semibold mb-1.5" style={{color:'var(--text-primary)'}}>Pilih Barang</label>
+                                <select required value={formData.barang_id} onChange={e => setFormData({ ...formData, barang_id: e.target.value })} className="w-full px-3 py-2.5 text-sm rounded-lg outline-none" style={{border:'1.5px solid var(--border)',background:'var(--bg)',color:'var(--text-primary)',fontFamily:'inherit'}} onFocus={e=>{e.currentTarget.style.borderColor='var(--primary)';e.currentTarget.style.boxShadow='0 0 0 3px rgba(99,102,241,0.1)';}} onBlur={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.boxShadow='none';}}>
                                     <option value="">-- Pilih Barang --</option>
-                                    {barangList.filter(b => b.status !== false).map(b => (
-                                        <option key={b.id} value={b.id}>{b.nama}</option>
-                                    ))}
+                                    {barangList.filter(b => b.status !== false).map(b => (<option key={b.id} value={b.id}>{b.nama}</option>))}
                                 </select>
                                 {formData.barang_id && (() => {
                                     const selectedBarang = barangList.find(b => b.id === formData.barang_id);
                                     if (selectedBarang) {
                                         const physicalStock = selectedBarang.stok || 0;
-                                        const pendingSum = (requestList || [])
-                                            .filter(r => r.barang_id === formData.barang_id && r.status === 'pending')
-                                            .reduce((sum, r) => sum + (r.jumlah || 0), 0);
+                                        const pendingSum = (requestList || []).filter(r => r.barang_id === formData.barang_id && r.status === 'pending').reduce((sum, r) => sum + (r.jumlah || 0), 0);
                                         const availableStock = physicalStock - pendingSum;
-
                                         return (
                                             <div className="mt-2 space-y-2">
                                                 {availableStock > 0 ? (
-                                                    <div className="p-3 bg-blue-50 rounded-xl space-y-1 border border-blue-100">
-                                                        <p className="text-xs text-blue-600 font-semibold uppercase tracking-wider">Informasi Stok</p>
-                                                        <div className="flex justify-between items-center text-sm">
-                                                            <span className="text-gray-600">Stok di Gudang:</span>
-                                                            <span className="font-bold text-gray-900">{physicalStock} {selectedBarang.satuan?.nama || ''}</span>
-                                                        </div>
-                                                        <div className="flex justify-between items-center text-sm">
-                                                            <span className="text-gray-600">Terpesan (Pending):</span>
-                                                            <span className={`font-bold ${pendingSum > 0 ? 'text-orange-600' : 'text-gray-400'}`}>
-                                                                {pendingSum > 0 ? `-${pendingSum}` : '0'} {selectedBarang.satuan?.nama || ''}
-                                                            </span>
-                                                        </div>
-                                                        <div className="pt-1 border-t border-blue-200 flex justify-between items-center text-sm">
-                                                            <span className="text-blue-700 font-medium">Tersedia (Siap Pesan):</span>
-                                                            <span className="font-bold text-blue-700">
-                                                                {availableStock} {selectedBarang.satuan?.nama || ''}
-                                                            </span>
-                                                        </div>
+                                                    <div className="p-3 rounded-xl space-y-1 border" style={{background:'var(--bg)',borderColor:'var(--primary-light)'}}>
+                                                        <p className="text-[11px] font-semibold uppercase tracking-wider" style={{color:'var(--primary)'}}>Informasi Stok</p>
+                                                        <div className="flex justify-between items-center text-xs"><span style={{color:'var(--text-secondary)'}}>Stok di Gudang:</span><span className="font-bold" style={{color:'var(--text-primary)'}}>{physicalStock} {selectedBarang.satuan?.nama || ''}</span></div>
+                                                        <div className="flex justify-between items-center text-xs"><span style={{color:'var(--text-secondary)'}}>Terpesan (Pending):</span><span className="font-bold" style={{color:pendingSum>0?'var(--amber)':'var(--text-muted)'}}>{pendingSum > 0 ? `-${pendingSum}` : '0'} {selectedBarang.satuan?.nama || ''}</span></div>
+                                                        <div className="pt-1.5 mt-1.5 flex justify-between items-center text-xs" style={{borderTop:'1px solid var(--primary-light)'}}><span className="font-medium" style={{color:'var(--primary)'}}>Tersedia (Siap Pesan):</span><span className="font-bold" style={{color:'var(--primary)'}}>{availableStock} {selectedBarang.satuan?.nama || ''}</span></div>
                                                     </div>
                                                 ) : (
-                                                    <div className="flex items-center gap-2 p-3 bg-red-50 text-red-700 rounded-xl border border-red-100 text-xs font-medium leading-relaxed">
-                                                        <AlertCircle className="w-4 h-4 shrink-0" />
-                                                        <span>Peringatan: Stok barang saat ini kosong atau masih dalam antrean pesan.</span>
-                                                    </div>
+                                                    <div className="flex items-center gap-2 p-3 rounded-xl border text-xs font-medium leading-relaxed" style={{background:'var(--danger-light)',borderColor:'var(--danger-light)',color:'var(--danger)'}}><AlertCircle className="w-4 h-4 shrink-0" /><span>Stok kosong atau antrean penuh.</span></div>
                                                 )}
                                             </div>
                                         );
@@ -505,84 +413,26 @@ export default function PermintaanBarangPage() {
                                     return null;
                                 })()}
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Jumlah</label>
-                                    <input
-                                        type="number"
-                                        required
-                                        min="1"
-                                        value={formData.jumlah}
-                                        onChange={e => setFormData({ ...formData, jumlah: e.target.value })}
-                                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-bold"
-                                        placeholder="0"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Satuan</label>
-                                    <input
-                                        type="text"
-                                        readOnly
-                                        disabled
-                                        value={barangList.find(b => b.id === formData.barang_id)?.satuan?.nama || ''}
-                                        className="w-full px-4 py-2.5 bg-gray-100 border border-gray-300 rounded-xl text-gray-500 cursor-not-allowed"
-                                        placeholder="Satuan"
-                                    />
-                                </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div><label className="block text-xs font-semibold mb-1.5" style={{color:'var(--text-primary)'}}>Jumlah <span style={{color:'var(--danger)'}}>*</span></label><input type="number" required min="1" value={formData.jumlah} onChange={e => setFormData({ ...formData, jumlah: e.target.value })} placeholder="0" className="w-full px-3 py-2.5 text-sm rounded-lg outline-none" style={{border:'1.5px solid var(--border)',background:'var(--bg)',color:'var(--text-primary)',fontFamily:'inherit'}} onFocus={e=>{e.currentTarget.style.borderColor='var(--primary)';e.currentTarget.style.boxShadow='0 0 0 3px rgba(99,102,241,0.1)';}} onBlur={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.boxShadow='none';}} /></div>
+                                <div><label className="block text-xs font-semibold mb-1.5" style={{color:'var(--text-primary)'}}>Satuan</label><input type="text" readOnly disabled value={barangList.find(b => b.id === formData.barang_id)?.satuan?.nama || ''} placeholder="Satuan" className="w-full px-3 py-2.5 text-sm rounded-lg" style={{border:'1.5px solid var(--border)',background:'var(--bg)',color:'var(--text-muted)',fontFamily:'inherit',cursor:'not-allowed'}} /></div>
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1.5">Tanggal Pengajuan</label>
-                                <input
-                                    type="date"
-                                    required
-                                    value={formData.tanggal}
-                                    onChange={e => setFormData({ ...formData, tanggal: e.target.value })}
-                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1.5">Keterangan / Keperluan</label>
-                                <textarea
-                                    value={formData.keterangan}
-                                    onChange={e => setFormData({ ...formData, keterangan: e.target.value })}
-                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all min-h-[100px]"
-                                    placeholder="Alasan permintaan barang..."
-                                />
-                            </div>
+                            <div><label className="block text-xs font-semibold mb-1.5 flex items-center gap-1.5" style={{color:'var(--text-primary)'}}><Calendar className="w-3.5 h-3.5" /> Tanggal <span style={{color:'var(--danger)'}}>*</span></label><input type="date" required value={formData.tanggal} onChange={e => setFormData({ ...formData, tanggal: e.target.value })} className="w-full px-3 py-2.5 text-sm rounded-lg outline-none" style={{border:'1.5px solid var(--border)',background:'var(--bg)',color:'var(--text-primary)',fontFamily:'inherit'}} onFocus={e=>{e.currentTarget.style.borderColor='var(--primary)';e.currentTarget.style.boxShadow='0 0 0 3px rgba(99,102,241,0.1)';}} onBlur={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.boxShadow='none';}} /></div>
+                            <div><label className="block text-xs font-semibold mb-1.5" style={{color:'var(--text-primary)'}}>Keterangan / Keperluan</label><textarea value={formData.keterangan} onChange={e => setFormData({ ...formData, keterangan: e.target.value })} rows={3} placeholder="Alasan permintaan barang..." className="w-full px-3 py-2.5 text-sm rounded-lg outline-none resize-none" style={{border:'1.5px solid var(--border)',background:'var(--bg)',color:'var(--text-primary)',fontFamily:'inherit'}} onFocus={e=>{e.currentTarget.style.borderColor='var(--primary)';e.currentTarget.style.boxShadow='0 0 0 3px rgba(99,102,241,0.1)';}} onBlur={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.boxShadow='none';}} /></div>
+                            
                             {(() => {
                                 const selected = barangList.find(b => b.id === formData.barang_id);
                                 const physicalStock = selected?.stok ?? 0;
-                                const pendingSum = (requestList || [])
-                                    .filter(r => r.barang_id === formData.barang_id && r.status === 'pending')
-                                    .reduce((sum, r) => sum + (r.jumlah || 0), 0);
+                                const pendingSum = (requestList || []).filter(r => r.barang_id === formData.barang_id && r.status === 'pending').reduce((sum, r) => sum + (r.jumlah || 0), 0);
                                 const availableStock = physicalStock - pendingSum;
-                                
                                 const requestedQty = formData.jumlah !== '' ? parseInt(formData.jumlah) : 0;
                                 const exceeded = requestedQty > availableStock && formData.barang_id !== '';
-                                
                                 return (
                                     <>
-                                        {exceeded && (
-                                            <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
-                                                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                                                <span>Jumlah pengajuan (<strong>{requestedQty}</strong>) melebihi stok tersedia (<strong>{availableStock}</strong>). Kurangi jumlah atau tunggu antrean lain ditolak.</span>
-                                            </div>
-                                        )}
-                                        <div className="flex items-center gap-3 pt-2">
-                                            <button
-                                                type="button"
-                                                onClick={() => setIsModalOpen(false)}
-                                                className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium"
-                                            >
-                                                Batal
-                                            </button>
-                                            <button
-                                                type="submit"
-                                                disabled={isSaving || exceeded || requestedQty <= 0}
-                                                className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-sm shadow-blue-100 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                            >
-                                                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Ajukan Permintaan'}
-                                            </button>
+                                        {exceeded && <div className="flex items-start gap-2 p-3 rounded-xl text-xs" style={{background:'var(--danger-light)',border:'1px solid var(--danger-light)',color:'var(--danger)'}}><AlertCircle className="w-4 h-4 mt-0.5 shrink-0" /><span>Jumlah pengajuan (<strong>{requestedQty}</strong>) melebihi stok tersedia (<strong>{availableStock}</strong>).</span></div>}
+                                        <div className="flex gap-2 pt-2" style={{borderTop:'1px solid var(--border)'}}>
+                                            <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-2 text-sm font-medium rounded-lg" style={{background:'var(--bg)',color:'var(--text-secondary)',border:'1px solid var(--border)',cursor:'pointer'}} onMouseEnter={e=>(e.currentTarget.style.background='var(--border)')} onMouseLeave={e=>(e.currentTarget.style.background='var(--bg)')}>Batal</button>
+                                            <button type="submit" disabled={isSaving || exceeded || requestedQty <= 0} className="flex-1 py-2 text-sm font-medium rounded-lg flex items-center justify-center gap-2" style={{background:(isSaving || exceeded || requestedQty <= 0)?'#a5b4fc':'var(--primary)',color:'#fff',border:'none',cursor:(isSaving || exceeded || requestedQty <= 0)?'not-allowed':'pointer'}}>{isSaving ? <><Loader2 className="w-4 h-4 animate-spin"/>Memproses...</> : 'Ajukan Permintaan'}</button>
                                         </div>
                                     </>
                                 );
@@ -594,98 +444,46 @@ export default function PermintaanBarangPage() {
 
             {/* Modal Approve Confirmation */}
             {isApproveModalOpen && selectedRequest && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in duration-300">
-                        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white">
-                            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                                Konfirmasi Persetujuan
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pt-16 md:pt-4 pointer-events-none">
+                    <div className="w-full max-w-md overflow-hidden animate-scale-in pointer-events-auto" style={{background:'var(--surface)',borderRadius:'16px',boxShadow:'var(--shadow-lg)',border:'1px solid var(--border)'}}>
+                        <div className="px-6 py-4 flex items-center justify-between" style={{borderBottom:'1px solid var(--border)'}}>
+                            <h3 className="text-base font-bold flex items-center gap-2" style={{color:'var(--text-primary)'}}>
+                                <CheckCircle2 className="w-4 h-4" style={{color:'var(--teal)'}} /> Konfirmasi Persetujuan
                             </h3>
-                            <button onClick={() => { setIsApproveModalOpen(false); setSelectedRequest(null); }} className="text-gray-400 hover:text-gray-600 transition-colors p-1">
-                                <X className="w-5 h-5" />
-                            </button>
+                            <button onClick={() => { setIsApproveModalOpen(false); setSelectedRequest(null); }} className="p-1.5 rounded-lg" style={{background:'transparent',border:'none',cursor:'pointer',color:'var(--text-muted)'}} onMouseEnter={e=>(e.currentTarget.style.background='var(--bg)')} onMouseLeave={e=>(e.currentTarget.style.background='transparent')}><X className="w-4 h-4" /></button>
                         </div>
                         <div className="p-6 space-y-4">
-                            <div className="bg-gray-50 rounded-xl p-4 space-y-3 text-sm">
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500">Pemohon</span>
-                                    <span className="font-semibold text-gray-900">{selectedRequest.pemohon || '-'}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500">Sub Bagian</span>
-                                    <span className="font-medium text-gray-900">{selectedRequest.sub_bagian?.nama || '-'}</span>
-                                </div>
-                                <div className="border-t border-gray-200"></div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500">Tanggal</span>
-                                    <span className="font-medium text-gray-900">
-                                        {new Date(selectedRequest.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
-                                    </span>
-                                </div>
-                                <div className="border-t border-gray-200"></div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500">Nama Barang</span>
-                                    <span className="font-semibold text-gray-900">{selectedRequest.barang?.nama || '-'}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500">Kode Barang</span>
-                                    <span className="font-mono text-gray-700">{selectedRequest.barang?.kode || '-'}</span>
-                                </div>
-                                <div className="border-t border-gray-200"></div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500">Jumlah Barang (Stok)</span>
-                                    <span className="font-bold text-blue-600">{selectedRequest.barang?.stok ?? 0} {selectedRequest.barang?.satuan?.nama || ''}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500">Jumlah Pengajuan</span>
-                                    <span className="font-bold text-orange-600">{selectedRequest.jumlah} {selectedRequest.barang?.satuan?.nama || ''}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500">Sisa Stok (setelah disetujui)</span>
-                                    <span className={`font-bold ${((selectedRequest.barang?.stok ?? 0) - selectedRequest.jumlah) < 0 ? 'text-red-600' : 'text-emerald-600'}`}>
-                                        {(selectedRequest.barang?.stok ?? 0) - selectedRequest.jumlah} {selectedRequest.barang?.satuan?.nama || ''}
-                                    </span>
-                                </div>
+                            <div className="rounded-xl p-4 space-y-3 text-xs" style={{background:'var(--bg)',border:'1px solid var(--border)'}}>
+                                <div className="flex justify-between"><span style={{color:'var(--text-secondary)'}}>Pemohon</span><span className="font-semibold" style={{color:'var(--text-primary)'}}>{selectedRequest.pemohon || '-'}</span></div>
+                                <div className="flex justify-between"><span style={{color:'var(--text-secondary)'}}>Sub Bagian</span><span className="font-medium" style={{color:'var(--text-primary)'}}>{selectedRequest.sub_bagian?.nama || '-'}</span></div>
+                                <div style={{borderTop:'1px solid var(--border)',margin:'8px 0'}}></div>
+                                <div className="flex justify-between"><span style={{color:'var(--text-secondary)'}}>Tanggal</span><span className="font-medium" style={{color:'var(--text-primary)'}}>{new Date(selectedRequest.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span></div>
+                                <div style={{borderTop:'1px solid var(--border)',margin:'8px 0'}}></div>
+                                <div className="flex justify-between"><span style={{color:'var(--text-secondary)'}}>Nama Barang</span><span className="font-semibold" style={{color:'var(--text-primary)'}}>{selectedRequest.barang?.nama || '-'}</span></div>
+                                <div className="flex justify-between"><span style={{color:'var(--text-secondary)'}}>Kode Barang</span><span className="font-mono flex" style={{color:'var(--text-muted)'}}>{selectedRequest.barang?.kode || '-'}</span></div>
+                                <div style={{borderTop:'1px dashed var(--border)',margin:'8px 0'}}></div>
+                                <div className="flex justify-between"><span style={{color:'var(--text-secondary)'}}>Jumlah Barang (Stok)</span><span className="font-bold" style={{color:'var(--text-primary)'}}>{selectedRequest.barang?.stok ?? 0} {selectedRequest.barang?.satuan?.nama || ''}</span></div>
+                                <div className="flex justify-between"><span style={{color:'var(--text-secondary)'}}>Jumlah Pengajuan</span><span className="font-bold" style={{color:'var(--amber)'}}>{selectedRequest.jumlah} {selectedRequest.barang?.satuan?.nama || ''}</span></div>
+                                <div className="flex justify-between pt-2 border-t mt-1" style={{borderTopColor:'var(--border)'}}><span style={{color:'var(--text-primary)',fontWeight:600}}>Sisa Stok (setelah disetujui)</span><span className="font-bold" style={{color:((selectedRequest.barang?.stok ?? 0) - selectedRequest.jumlah)<0 ? 'var(--danger)' : 'var(--teal)'}}>{(selectedRequest.barang?.stok ?? 0) - selectedRequest.jumlah} {selectedRequest.barang?.satuan?.nama || ''}</span></div>
                             </div>
-
                             {((selectedRequest.barang?.stok ?? 0) - selectedRequest.jumlah) < 0 && (
-                                <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+                                <div className="flex items-start gap-2 p-3 rounded-xl text-xs" style={{background:'var(--danger-light)',border:'1px solid var(--danger-light)',color:'var(--danger)'}}>
                                     <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                                    <span>Stok tidak mencukupi! Sisa stok akan menjadi negatif jika disetujui.</span>
+                                    <span>Stok tidak mencukupi! Sisa stok akan negatif jika disetujui.</span>
                                 </div>
                             )}
-
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1.5">Catatan (opsional)</label>
-                                <textarea
-                                    value={approvalNote}
-                                    onChange={e => setApprovalNote(e.target.value)}
-                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all min-h-[80px]"
-                                    placeholder="Catatan tambahan..."
-                                />
+                                <label className="block text-xs font-semibold mb-1.5" style={{color:'var(--text-primary)'}}>Catatan (opsional)</label>
+                                <textarea value={approvalNote} onChange={e => setApprovalNote(e.target.value)} rows={3} className="w-full px-3 py-2.5 text-sm rounded-lg outline-none resize-none" style={{border:'1.5px solid var(--border)',background:'var(--bg)',color:'var(--text-primary)',fontFamily:'inherit'}} onFocus={e=>{e.currentTarget.style.borderColor='var(--teal)';e.currentTarget.style.boxShadow='0 0 0 3px rgba(20,184,166,0.1)';}} onBlur={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.boxShadow='none';}} placeholder="Catatan tambahan..." />
                             </div>
-
-                            <div className="flex items-center gap-3 pt-2">
-                                <button
-                                    type="button"
-                                    onClick={() => { setIsApproveModalOpen(false); setSelectedRequest(null); }}
-                                    className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium"
-                                >
-                                    Batal
-                                </button>
-                                <button
-                                    type="button"
-                                    disabled={isSaving}
-                                    onClick={() => handleUpdateStatus(selectedRequest.id, 'disetujui')}
-                                    className="flex-1 px-4 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all shadow-sm shadow-emerald-100 font-medium disabled:opacity-50 flex items-center justify-center gap-2"
-                                >
-                                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Disetujui'}
-                                </button>
+                            <div className="flex gap-2 pt-2" style={{borderTop:'1px solid var(--border)'}}>
+                                <button type="button" onClick={() => { setIsApproveModalOpen(false); setSelectedRequest(null); }} className="flex-1 py-2 text-sm font-medium rounded-lg" style={{background:'var(--bg)',color:'var(--text-secondary)',border:'1px solid var(--border)',cursor:'pointer'}} onMouseEnter={e=>(e.currentTarget.style.background='var(--border)')} onMouseLeave={e=>(e.currentTarget.style.background='var(--bg)')}>Batal</button>
+                                <button type="button" disabled={isSaving} onClick={() => handleUpdateStatus(selectedRequest.id, 'disetujui')} className="flex-1 py-2 text-sm font-medium rounded-lg flex items-center justify-center gap-2" style={{background:isSaving?'#99f6e4':'var(--teal)',color:'#fff',border:'none',cursor:isSaving?'not-allowed':'pointer'}}>{isSaving ? <Loader2 className="w-4 h-4 animate-spin"/> : 'Setujui'}</button>
                             </div>
                         </div>
                     </div>
                 </div>
             )}
-        </div>
+        </>
     );
 }

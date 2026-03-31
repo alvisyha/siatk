@@ -11,7 +11,8 @@ import {
     Loader2,
     AlertTriangle,
     History,
-    PlusCircle
+    PlusCircle,
+    TrendingUp
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -46,6 +47,53 @@ interface DashboardStats {
     totalMasukHariIni: number;
     totalKeluarHariIni: number;
     lowStockCount: number;
+}
+
+// Reusable stat card component inline
+function StatCard({
+    icon: Icon,
+    label,
+    value,
+    accentColor,
+    bgColor,
+}: {
+    icon: any;
+    label: string;
+    value: number;
+    accentColor: string;
+    bgColor: string;
+}) {
+    return (
+        <div style={{
+            background: 'var(--surface)', borderRadius: '14px',
+            border: '1px solid var(--border)', padding: '20px 22px',
+            boxShadow: 'var(--shadow-sm)',
+            display: 'flex', alignItems: 'center', gap: '16px',
+            transition: 'box-shadow 0.2s ease, transform 0.2s ease',
+            cursor: 'default'
+        }}
+            onMouseEnter={e => {
+                (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-md)';
+                (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={e => {
+                (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-sm)';
+                (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+            }}
+        >
+            <div style={{
+                width: '44px', height: '44px', borderRadius: '12px',
+                background: bgColor, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0
+            }}>
+                <Icon style={{ width: '20px', height: '20px', color: accentColor }} />
+            </div>
+            <div>
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '0 0 4px', fontWeight: 500 }}>{label}</p>
+                <p style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, lineHeight: 1 }}>{value}</p>
+            </div>
+        </div>
+    );
 }
 
 export default function DashboardPage() {
@@ -99,278 +147,265 @@ export default function DashboardPage() {
         return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
     };
 
+    const getActivityIcon = (activity: Activity) => {
+        if (activity.activityType === 'masuk') return { icon: ArrowDownLeft, bg: 'var(--teal-light)', color: 'var(--teal)' };
+        if (activity.activityType === 'keluar') return { icon: ArrowUpRight, bg: 'var(--amber-light)', color: 'var(--amber)' };
+        const status = (activity as any).status;
+        if (status === 'disetujui') return { icon: CheckCircle2, bg: 'var(--success-light)', color: 'var(--success)' };
+        if (status === 'ditolak') return { icon: AlertCircle, bg: 'var(--danger-light)', color: 'var(--danger)' };
+        return { icon: History, bg: '#fef3c7', color: '#d97706' };
+    };
+
     if (isLoading) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] text-gray-500">
-                <Loader2 className="w-10 h-10 animate-spin text-blue-600 mb-4" />
-                <p className="font-medium">Memuat dashboard Anda...</p>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '12px' }}>
+                <Loader2 style={{ width: '32px', height: '32px', color: 'var(--primary)', animation: 'spin 1s linear infinite' }} />
+                <p style={{ color: 'var(--text-secondary)', fontSize: '14px', fontWeight: 500, margin: 0 }}>Memuat dashboard...</p>
+                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>
         );
     }
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
-            {/* Welcome Section */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+
+            {/* Welcome */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-                        Selamat Datang, <span className="text-blue-600">{user?.name || 'User'}</span>! 👋
+                    <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 4px', lineHeight: 1.3 }}>
+                        Selamat Datang, <span style={{ color: 'var(--primary)' }}>{user?.name || 'User'}</span> 👋
                     </h1>
-                    <p className="text-gray-500 mt-1">
-                        {user?.role === 'admin' 
-                            ? 'Berikut adalah ringkasan inventaris ATK Anda hari ini.' 
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '13.5px', margin: 0 }}>
+                        {user?.role === 'admin'
+                            ? 'Berikut adalah ringkasan inventaris ATK Anda hari ini.'
                             : 'Pantau status pengajuan barang Anda di sini.'}
                     </p>
                     {user?.role === 'user' && (
-                        <div className="mt-4">
-                            <Link href="/dashboard/permintaan-barang">
-                                <button className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-sm shadow-blue-200 font-medium text-sm">
-                                    <PlusCircle className="w-4 h-4" />
+                        <div style={{ marginTop: '14px' }}>
+                            <Link href="/dashboard/permintaan-barang" style={{ textDecoration: 'none' }}>
+                                <button style={{
+                                    display: 'inline-flex', alignItems: 'center', gap: '7px',
+                                    padding: '9px 18px', borderRadius: '10px',
+                                    background: 'var(--primary)', color: '#fff',
+                                    fontSize: '13px', fontWeight: 600, border: 'none', cursor: 'pointer',
+                                    boxShadow: '0 4px 12px rgba(99,102,241,0.25)',
+                                    transition: 'all 0.2s ease'
+                                }}
+                                    onMouseEnter={e => {
+                                        (e.currentTarget as HTMLElement).style.background = 'var(--primary-hover)';
+                                        (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)';
+                                    }}
+                                    onMouseLeave={e => {
+                                        (e.currentTarget as HTMLElement).style.background = 'var(--primary)';
+                                        (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+                                    }}
+                                >
+                                    <PlusCircle style={{ width: '15px', height: '15px' }} />
                                     Buat Permintaan Baru
                                 </button>
                             </Link>
                         </div>
                     )}
                 </div>
-                <div className="flex items-center gap-3 px-4 py-2 bg-white rounded-lg border border-gray-200 shadow-sm text-sm">
-                    <Clock className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-700 font-medium min-w-[80px] text-center">
+
+                {/* Clock */}
+                <div style={{
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    padding: '10px 16px', background: 'var(--surface)',
+                    borderRadius: '10px', border: '1px solid var(--border)',
+                    boxShadow: 'var(--shadow-sm)'
+                }}>
+                    <Clock style={{ width: '15px', height: '15px', color: 'var(--text-muted)' }} />
+                    <span style={{ fontSize: '13.5px', fontWeight: 600, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums', minWidth: '72px' }}>
                         {mounted ? currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '--:--:--'}
                     </span>
                 </div>
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 text-gray-900">
+            {/* Stats */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '14px' }}>
                 {user?.role === 'admin' ? (
                     <>
-                        {/* Total Master Barang */}
-                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-all">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="p-3 rounded-lg bg-blue-50">
-                                    <Package className="w-6 h-6 text-blue-600" />
-                                </div>
-                            </div>
-                            <h3 className="text-gray-500 text-sm font-medium mb-1">Total Jenis Barang</h3>
-                            <p className="text-2xl font-bold">{stats?.totalBarang || 0}</p>
-                        </div>
-
-                        {/* Masuk Hari Ini */}
-                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-all">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="p-3 rounded-lg bg-emerald-50 text-emerald-600">
-                                    <ArrowDownLeft className="w-6 h-6" />
-                                </div>
-                            </div>
-                            <h3 className="text-gray-500 text-sm font-medium mb-1">Transaksi Masuk</h3>
-                            <p className="text-2xl font-bold">{stats?.totalMasukHariIni || 0}</p>
-                        </div>
-
-                        {/* Keluar Hari Ini */}
-                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-all">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="p-3 rounded-lg bg-orange-50 text-orange-600">
-                                    <ArrowUpRight className="w-6 h-6" />
-                                </div>
-                            </div>
-                            <h3 className="text-gray-500 text-sm font-medium mb-1">Transaksi Keluar</h3>
-                            <p className="text-2xl font-bold">{stats?.totalKeluarHariIni || 0}</p>
-                        </div>
-
-                        {/* Stok Rendah */}
-                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-all">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="p-3 rounded-lg bg-red-50 text-red-600">
-                                    <AlertTriangle className="w-6 h-6" />
-                                </div>
-                            </div>
-                            <h3 className="text-gray-500 text-sm font-medium mb-1">Stok Menipis</h3>
-                            <p className="text-2xl font-bold">{stats?.lowStockCount || 0}</p>
-                        </div>
+                        <StatCard icon={Package} label="Total Jenis Barang" value={stats?.totalBarang || 0} accentColor="var(--primary)" bgColor="var(--primary-light)" />
+                        <StatCard icon={ArrowDownLeft} label="Transaksi Masuk" value={stats?.totalMasukHariIni || 0} accentColor="var(--teal)" bgColor="var(--teal-light)" />
+                        <StatCard icon={ArrowUpRight} label="Transaksi Keluar" value={stats?.totalKeluarHariIni || 0} accentColor="var(--amber)" bgColor="var(--amber-light)" />
+                        <StatCard icon={AlertTriangle} label="Stok Menipis" value={stats?.lowStockCount || 0} accentColor="var(--danger)" bgColor="var(--danger-light)" />
                     </>
                 ) : (
                     <>
-                        {/* Total Pengajuan */}
-                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-all">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="p-3 rounded-lg bg-blue-50">
-                                    <History className="w-6 h-6 text-blue-600" />
-                                </div>
-                            </div>
-                            <h3 className="text-gray-500 text-sm font-medium mb-1">Total Pengajuan</h3>
-                            <p className="text-2xl font-bold">{(stats as any)?.totalRequest || 0}</p>
-                        </div>
-
-                        {/* Menunggu */}
-                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-all">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="p-3 rounded-lg bg-yellow-50 text-yellow-600">
-                                    <Clock className="w-6 h-6" />
-                                </div>
-                            </div>
-                            <h3 className="text-gray-500 text-sm font-medium mb-1">Menunggu</h3>
-                            <p className="text-2xl font-bold">{(stats as any)?.pendingCount || 0}</p>
-                        </div>
-
-                        {/* Disetujui */}
-                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-all">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="p-3 rounded-lg bg-emerald-50 text-emerald-600">
-                                    <CheckCircle2 className="w-6 h-6" />
-                                </div>
-                            </div>
-                            <h3 className="text-gray-500 text-sm font-medium mb-1">Disetujui</h3>
-                            <p className="text-2xl font-bold">{(stats as any)?.approvedCount || 0}</p>
-                        </div>
-
-                        {/* Ditolak */}
-                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-all">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="p-3 rounded-lg bg-red-50 text-red-600">
-                                    <AlertCircle className="w-6 h-6" />
-                                </div>
-                            </div>
-                            <h3 className="text-gray-500 text-sm font-medium mb-1">Ditolak</h3>
-                            <p className="text-2xl font-bold">{(stats as any)?.rejectedCount || 0}</p>
-                        </div>
+                        <StatCard icon={History} label="Total Pengajuan" value={(stats as any)?.totalRequest || 0} accentColor="var(--primary)" bgColor="var(--primary-light)" />
+                        <StatCard icon={Clock} label="Menunggu" value={(stats as any)?.pendingCount || 0} accentColor="var(--amber)" bgColor="var(--amber-light)" />
+                        <StatCard icon={CheckCircle2} label="Disetujui" value={(stats as any)?.approvedCount || 0} accentColor="var(--teal)" bgColor="var(--teal-light)" />
+                        <StatCard icon={AlertCircle} label="Ditolak" value={(stats as any)?.rejectedCount || 0} accentColor="var(--danger)" bgColor="var(--danger-light)" />
                     </>
                 )}
             </div>
 
-            {/* Main Content Grid */}
-            <div className={`grid grid-cols-1 ${user?.role === 'admin' ? 'lg:grid-cols-3' : 'lg:grid-cols-1'} gap-6 text-gray-900`}>
-                {/* Recent Activity */}
-                <div className={`${user?.role === 'admin' ? 'lg:col-span-2' : ''} bg-white rounded-xl border border-gray-100 shadow-sm p-4 md:p-5 flex flex-col`}>
-                    <div className="flex items-center justify-between mb-4 border-b border-gray-50 pb-3">
-                        <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
-                            <History className="w-4 h-4 text-gray-400" />
+            {/* Content Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: user?.role === 'admin' ? '1fr 340px' : '1fr', gap: '20px', alignItems: 'start' }}
+                className={user?.role === 'admin' ? 'dashboard-grid' : ''}>
+
+                {/* Activity Feed */}
+                <div style={{
+                    background: 'var(--surface)', borderRadius: '14px',
+                    border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)',
+                    overflow: 'hidden'
+                }}>
+                    {/* Card Header */}
+                    <div style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        padding: '16px 20px', borderBottom: '1px solid var(--border)'
+                    }}>
+                        <h2 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <History style={{ width: '15px', height: '15px', color: 'var(--text-muted)' }} />
                             {user?.role === 'admin' ? 'Aktivitas Terbaru' : 'Status Pengajuan Terbaru'}
                         </h2>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto pr-1 space-y-2 max-h-[320px]">
+                    <div style={{ padding: '12px', maxHeight: '360px', overflowY: 'auto' }}>
                         {activities.length === 0 ? (
-                            <div className="py-10 text-center text-gray-500 italic">
+                            <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13.5px' }}>
                                 Belum ada aktivitas terbaru hari ini.
                             </div>
                         ) : (
-                            activities.map((activity) => (
-                                <div
-                                    key={activity.id}
-                                    className="flex items-center gap-4 p-3.5 rounded-xl bg-gray-50/50 border border-gray-100 hover:bg-white hover:shadow-sm hover:border-blue-100 transition-all duration-300 group"
-                                >
-                                    <div className="mt-0.5">
-                                        {activity.activityType === 'masuk' ? (
-                                            <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
-                                                <ArrowDownLeft className="w-4 h-4 text-emerald-600" />
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                {activities.map((activity) => {
+                                    const { icon: ActivityIcon, bg, color } = getActivityIcon(activity);
+                                    return (
+                                        <div key={activity.id} style={{
+                                            display: 'flex', alignItems: 'center', gap: '12px',
+                                            padding: '12px 14px', borderRadius: '10px',
+                                            border: '1px solid transparent',
+                                            transition: 'all 0.15s ease', cursor: 'default'
+                                        }}
+                                            onMouseEnter={e => {
+                                                (e.currentTarget as HTMLElement).style.background = 'var(--bg)';
+                                                (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)';
+                                            }}
+                                            onMouseLeave={e => {
+                                                (e.currentTarget as HTMLElement).style.background = 'transparent';
+                                                (e.currentTarget as HTMLElement).style.borderColor = 'transparent';
+                                            }}
+                                        >
+                                            <div style={{
+                                                width: '34px', height: '34px', borderRadius: '50%',
+                                                background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                                            }}>
+                                                <ActivityIcon style={{ width: '15px', height: '15px', color: color }} />
                                             </div>
-                                        ) : activity.activityType === 'keluar' ? (
-                                            <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
-                                                <ArrowUpRight className="w-4 h-4 text-orange-600" />
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-primary)', lineHeight: 1.4 }}>
+                                                    <span style={{ fontWeight: 600 }}>{activity.barang.nama}</span>
+                                                    <span style={{ color: 'var(--text-secondary)', marginLeft: '4px' }}>
+                                                        {activity.activityType === 'masuk' ? 'masuk' :
+                                                            activity.activityType === 'keluar' ? 'keluar' :
+                                                                `— ${(activity as any).status}`}
+                                                    </span>
+                                                    {(activity.activityType as any) !== 'permintaan' && (
+                                                        <span style={{ marginLeft: '4px', fontWeight: 700, color: color }}>
+                                                            {activity.jumlah} {activity.satuan || 'unit'}
+                                                        </span>
+                                                    )}
+                                                </p>
                                             </div>
-                                        ) : (
-                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center 
-                                                ${(activity as any).status === 'disetujui' ? 'bg-emerald-100 text-emerald-600' : 
-                                                  (activity as any).status === 'ditolak' ? 'bg-red-100 text-red-600' : 'bg-yellow-100 text-yellow-600'}`}>
-                                                <History className="w-4 h-4" />
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div className="flex-1">
-                                        <p className="text-sm text-gray-900">
-                                            <span className="font-semibold">{activity.barang.nama}</span>
-                                            <span className="text-gray-500 ml-1">
-                                                {activity.activityType === 'masuk' ? 'telah masuk sebanyak' : 
-                                                 activity.activityType === 'keluar' ? 'telah keluar sebanyak' : 
-                                                 `sebanyak ${activity.jumlah} unit sedang ${(activity as any).status}`}
+                                            <span style={{ fontSize: '11px', color: 'var(--text-muted)', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
+                                                {formatTime(activity.created_at)}
                                             </span>
-                                            {(activity.activityType as any) !== 'permintaan' && (
-                                                <span className={`ml-1 font-bold ${activity.activityType === 'masuk' ? 'text-emerald-600' : 'text-orange-600'}`}>
-                                                    {activity.jumlah} {activity.satuan || 'unit'}
-                                                </span>
-                                            )}
-                                        </p>
-                                    </div>
-                                    <div className="text-right shrink-0">
-                                        <p className="text-[11px] text-gray-400 flex items-center gap-1">
-                                            <Clock className="w-3 h-3" />
-                                            {formatTime(activity.created_at)}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         )}
                     </div>
                 </div>
 
-                {/* Low Stock Alerts (Only for Admin) */}
+                {/* Low Stock Alerts */}
                 {user?.role === 'admin' && (
-                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-                        <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                <AlertTriangle className="w-5 h-5 text-red-500" />
-                                Peringatan Stok Rendah
+                    <div style={{
+                        background: 'var(--surface)', borderRadius: '14px',
+                        border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)',
+                        overflow: 'hidden'
+                    }}>
+                        <div style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                            padding: '16px 20px', borderBottom: '1px solid var(--border)'
+                        }}>
+                            <h2 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <AlertTriangle style={{ width: '15px', height: '15px', color: 'var(--danger)' }} />
+                                Stok Rendah
                             </h2>
                             {lowStockItems.length > 0 && (
-                                <Link 
-                                    href="/dashboard/barang" 
-                                    className="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline transition-all"
+                                <Link href="/dashboard/barang" style={{
+                                    fontSize: '12px', fontWeight: 600, color: 'var(--primary)',
+                                    textDecoration: 'none'
+                                }}
+                                    onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
+                                    onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
                                 >
                                     Lihat Semua
                                 </Link>
                             )}
                         </div>
 
-                        <div className="space-y-4">
+                        <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             {lowStockItems.length === 0 ? (
-                                <div className="py-6 text-center text-gray-500 text-sm italic">
-                                    Semua stok dalam kondisi aman.
+                                <div style={{ padding: '28px 16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
+                                    Semua stok dalam kondisi aman. ✓
                                 </div>
                             ) : (
-                                lowStockItems.slice(0, 3).map((item) => (
-                                    <div key={item.id} className="p-3 bg-red-50/50 border border-red-100 rounded-lg group hover:bg-red-50 transition-all duration-300">
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex-1 mr-2">
-                                                <h4 className="text-sm font-semibold text-gray-900 truncate">{item.nama}</h4>
-                                                <p className="text-[10px] text-gray-500 mt-0.5 font-mono">{item.kode || '-'}</p>
+                                lowStockItems.slice(0, 3).map((item) => {
+                                    const pct = Math.min((item.jumlah / Math.max(item.stok_minimum, 1)) * 100, 100);
+                                    return (
+                                        <div key={item.id} style={{
+                                            padding: '12px 14px', borderRadius: '10px',
+                                            background: 'var(--danger-light)',
+                                            border: '1px solid var(--danger-border)'
+                                        }}>
+                                            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                                <div>
+                                                    <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{item.nama}</p>
+                                                    <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{item.kode || '—'}</p>
+                                                </div>
+                                                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                                    <p style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: 'var(--danger)', lineHeight: 1.1 }}>{item.jumlah}</p>
+                                                    <p style={{ margin: 0, fontSize: '10px', color: 'var(--danger)', fontWeight: 500 }}>{item.satuan || 'Unit'}</p>
+                                                </div>
                                             </div>
-                                            <div className="text-right shrink-0">
-                                                <p className="text-lg font-bold text-red-600 leading-none">{item.jumlah}</p>
-                                                <p className="text-[9px] text-red-400 mt-1 uppercase font-bold tracking-tighter">{item.satuan || 'Unit'}</p>
+                                            {/* Progress */}
+                                            <div style={{ height: '4px', background: 'rgba(220,38,38,0.15)', borderRadius: '99px', overflow: 'hidden' }}>
+                                                <div style={{ height: '100%', width: `${pct}%`, background: 'var(--danger)', borderRadius: '99px', transition: 'width 0.5s ease' }} />
+                                            </div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px' }}>
+                                                <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Min: {item.stok_minimum}</span>
+                                                <span style={{ fontSize: '10px', color: 'var(--danger)', fontWeight: 600 }}>{pct.toFixed(0)}%</span>
                                             </div>
                                         </div>
-                                        {/* Progress indicate seriousness */}
-                                        <div className="mt-3 h-1.5 bg-red-100/50 rounded-full overflow-hidden">
-                                            <div 
-                                                className="h-full bg-red-500 rounded-full transition-all duration-500" 
-                                                style={{ width: `${Math.min((item.jumlah / Math.max(item.stok_minimum, 1)) * 100, 100)}%` }} 
-                                            />
-                                        </div>
-                                        <div className="flex justify-between items-center mt-2">
-                                            <span className="text-[9px] text-gray-400">Ambang: {item.stok_minimum}</span>
-                                            <span className="text-[10px] text-red-500 font-semibold">Tersisa {(item.jumlah / Math.max(item.stok_minimum, 1) * 100).toFixed(0)}%</span>
-                                        </div>
-                                    </div>
-                                ))
+                                    );
+                                })
                             )}
 
                             {(stats?.lowStockCount || 0) > 3 && (
-                                <div className="p-2 py-1.5 bg-gray-50 rounded-lg text-center">
-                                    <p className="text-[11px] text-gray-500 font-medium italic">
-                                        + {(stats?.lowStockCount || 0) - 3} barang lainnya juga menipis
-                                    </p>
-                                </div>
+                                <p style={{ textAlign: 'center', fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0', fontStyle: 'italic' }}>
+                                    + {(stats?.lowStockCount || 0) - 3} barang lainnya
+                                </p>
                             )}
 
-                            <div className="pt-4 mt-2">
-                                 <p className="text-[11px] text-center text-gray-400 italic">
-                                    Segera lakukan transaksi barang masuk untuk menjaga ketersediaan stok.
-                                 </p>
-                            </div>
+                            {lowStockItems.length > 0 && (
+                                <p style={{ textAlign: 'center', fontSize: '11.5px', color: 'var(--text-muted)', margin: '6px 0 0', fontStyle: 'italic' }}>
+                                    Segera lakukan transaksi barang masuk.
+                                </p>
+                            )}
                         </div>
                     </div>
                 )}
             </div>
+
+            <style>{`
+              @keyframes spin { to { transform: rotate(360deg); } }
+              @media (max-width: 800px) {
+                .dashboard-grid { grid-template-columns: 1fr !important; }
+              }
+            `}</style>
         </div>
     );
 }

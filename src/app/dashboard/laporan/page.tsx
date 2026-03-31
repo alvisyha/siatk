@@ -29,7 +29,7 @@ interface SubBagian {
     nama: string;
 }
 
-type ReportType = 'STOK' | 'MASUK' | 'KELUAR' | 'NILAI_PERSEDIAAN';
+type ReportType = 'STOK' | 'MASUK' | 'KELUAR' | 'NILAI_PERSEDIAAN' | 'REKAP_USER';
 
 interface LaporanData {
     id: string;
@@ -44,11 +44,15 @@ interface LaporanData {
     total_harga?: number;
     satuan_id?: string;
     sumber?: string;
-    // Recap fields
     stok_awal?: number;
     masuk?: number;
     keluar?: number;
     stok_akhir?: number;
+    // User Recap specifics
+    diminta?: number;
+    disetujui?: number;
+    pending?: number;
+    ditolak?: number;
 }
 
 export default function LaporanPage() {
@@ -77,7 +81,8 @@ export default function LaporanPage() {
     ];
 
     const reportTypes = [
-        { id: 'STOK', label: 'Stok ATK', icon: Box, roles: ['admin', 'user'] },
+        { id: 'REKAP_USER', label: 'Laporan Rekap', icon: ClipboardList, roles: ['user'] },
+        { id: 'STOK', label: 'Stok ATK', icon: Box, roles: ['admin'] },
         { id: 'MASUK', label: 'Barang Masuk', icon: ArrowDownLeft, roles: ['admin'] },
         { id: 'KELUAR', label: 'Barang Keluar', icon: ArrowUpRight, roles: ['admin'] },
         { id: 'NILAI_PERSEDIAAN', label: 'Nilai Persediaan', icon: Database, roles: ['admin'] },
@@ -109,6 +114,7 @@ export default function LaporanPage() {
                 setUserSubBagianId(user.sub_bagian_id);
                 if (user.role === 'user') {
                     setSelectedSubBagian(user.sub_bagian_id || 'all');
+                    setReportType('REKAP_USER');
                 }
             }
         } catch (error) {
@@ -266,6 +272,43 @@ export default function LaporanPage() {
                     };
                 });
             }
+            else if (reportType === 'REKAP_USER') {
+                const subId = userSubBagianId;
+                if (!subId) {
+                    formattedData = [];
+                } else {
+                    const [resPermintaan, resBarang, resSatuan] = await Promise.all([
+                        sb.from('permintaan_barang')
+                            .select('barang_id, jumlah, status, tanggal')
+                            .eq('sub_bagian_id', subId)
+                            .gte('tanggal', startDate)
+                            .lte('tanggal', endDate),
+                        sb.from('barang').select('id, nama, satuan_id'),
+                        sb.from('satuan').select('id, nama')
+                    ]);
+
+                    if (resPermintaan.error) throw resPermintaan.error;
+
+                    formattedData = (resPermintaan.data || []).map((item: any) => {
+                        const b = (resBarang.data || []).find((x: any) => x.id === item.barang_id);
+                        const s = b ? (resSatuan.data || []).find((x: any) => x.id === b.satuan_id) : null;
+                        
+                        const qty = Number(item.jumlah) || 0;
+                        return {
+                            id: item.id,
+                            tanggal: new Date(item.tanggal).toLocaleDateString('id-ID'),
+                            barang_nama: b?.nama || 'Unknown',
+                            jumlah: qty,
+                            satuan: s?.nama || '-',
+                            diminta: qty,
+                            disetujui: item.status === 'disetujui' ? qty : 0,
+                            pending: item.status === 'pending' ? qty : 0,
+                            ditolak: item.status === 'ditolak' ? qty : 0,
+                            status: item.status
+                        };
+                    });
+                }
+            }
 
             setData(formattedData);
         } catch (error) {
@@ -313,6 +356,11 @@ export default function LaporanPage() {
                 head = [['No', 'Nama Barang', 'Stok Saat Ini', 'Satuan']];
                 body = filteredData.map((item, i) => [
                     i + 1, item.barang_nama, item.jumlah, item.satuan
+                ]);
+            } else if (reportType === 'REKAP_USER') {
+                head = [['No', 'Tanggal', 'Nama Barang', 'Satuan', 'Jumlah', 'Status']];
+                body = filteredData.map((item, i) => [
+                    i + 1, item.tanggal || '-', item.barang_nama, item.satuan, item.diminta || 0, (item.status || 'pending').toUpperCase()
                 ]);
             } else if (reportType === 'MASUK') {
                 const grandTotal = filteredData.reduce((sum, item) => sum + (item.total_harga || 0), 0);
@@ -370,7 +418,7 @@ export default function LaporanPage() {
     );
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
+        <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-black tracking-tight text-gray-900 flex items-center gap-3">
@@ -527,6 +575,33 @@ export default function LaporanPage() {
                     />
                 </div>
                 </div>
+
+                {reportType === 'REKAP_USER' && (
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-gray-50">
+                        <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                            <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-1">Total Tipe Barang</p>
+                            <p className="text-xl font-black text-blue-900">{filteredData.length}</p>
+                        </div>
+                        <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100">
+                            <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">Total Disetujui</p>
+                            <p className="text-xl font-black text-emerald-900">
+                                {filteredData.reduce((sum, item) => sum + (item.disetujui || 0), 0)}
+                            </p>
+                        </div>
+                        <div className="bg-yellow-50/50 p-4 rounded-xl border border-yellow-100">
+                            <p className="text-[10px] font-bold text-yellow-600 uppercase tracking-widest mb-1">Total Menunggu</p>
+                            <p className="text-xl font-black text-yellow-900">
+                                {filteredData.reduce((sum, item) => sum + (item.pending || 0), 0)}
+                            </p>
+                        </div>
+                        <div className="bg-red-50/50 p-4 rounded-xl border border-red-100">
+                            <p className="text-[10px] font-bold text-red-600 uppercase tracking-widest mb-1">Total Ditolak</p>
+                            <p className="text-xl font-black text-red-900">
+                                {filteredData.reduce((sum, item) => sum + (item.ditolak || 0), 0)}
+                            </p>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Table Section */}
@@ -547,6 +622,7 @@ export default function LaporanPage() {
                                 {reportType === 'NILAI_PERSEDIAAN' && <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Total Nilai</th>}
                                 {reportType === 'KELUAR' && <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Penerima</th>}
                                 {reportType === 'KELUAR' && <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Sumber</th>}
+                                {reportType === 'REKAP_USER' && <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-center">Status</th>}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
@@ -560,11 +636,11 @@ export default function LaporanPage() {
                                 ))
                             ) : filteredData.length > 0 ? (
                                 filteredData.map((item, index) => (
-                                    <tr key={item.id} className="hover:bg-blue-50/30 transition-colors">
+                                    <tr key={`${item.id}-${index}`} className="hover:bg-blue-50/30 transition-colors">
                                         <td className="px-6 py-4 text-sm text-gray-500">{index + 1}</td>
                                         {reportType !== 'STOK' && reportType !== 'NILAI_PERSEDIAAN' && <td className="px-6 py-4 text-sm font-medium text-gray-900">{item.tanggal}</td>}
                                         <td className="px-6 py-4 text-sm font-bold text-blue-700">{item.barang_nama}</td>
-                                        <td className="px-6 py-4 text-sm font-black text-gray-900 text-center">{item.jumlah}</td>
+                                        {reportType !== 'REKAP_USER' && <td className="px-6 py-4 text-sm font-black text-gray-900 text-center">{item.jumlah}</td>}
                                         <td className="px-6 py-4 text-sm text-gray-600 font-medium">{item.satuan}</td>
                                         {reportType === 'MASUK' && (
                                             <td className="px-6 py-4 text-sm font-mono font-medium">
@@ -595,6 +671,16 @@ export default function LaporanPage() {
                                                     item.sumber === 'Langsung' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
                                                 }`}>
                                                     {item.sumber}
+                                                </span>
+                                            </td>
+                                        )}
+                                        {reportType === 'REKAP_USER' && (
+                                            <td className="px-6 py-4 text-sm text-center" colSpan={3}>
+                                                <span className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${
+                                                    item.status === 'disetujui' ? 'bg-emerald-100 text-emerald-700' : 
+                                                    item.status === 'ditolak' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
+                                                }`}>
+                                                    {item.status}
                                                 </span>
                                             </td>
                                         )}

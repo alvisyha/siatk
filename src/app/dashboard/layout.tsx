@@ -8,15 +8,8 @@ import {
     Users,
     Settings,
     LogOut,
-    Menu,
-    X,
-    Bell,
-    Search,
     ChevronDown,
     Box,
-    DoorOpen,
-    Scale,
-    Tags,
     ChevronRight,
     Database,
     ArrowDownLeft,
@@ -24,7 +17,6 @@ import {
     ClipboardList,
     Briefcase,
     Truck,
-    CheckCircle,
     PackageCheck,
     FileText,
     Ruler
@@ -75,9 +67,8 @@ export default function DashboardLayout({
     const router = useRouter();
     const pathname = usePathname();
     const [user, setUser] = useState<User | null>(null);
-    const [sidebarOpen, setSidebarOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
-    const [openMenus, setOpenMenus] = useState<string[]>(['Master Data', 'Transaksi']); // Both groups open by default
+    const [openMenus, setOpenMenus] = useState<string[]>(['Master Data', 'Transaksi']);
 
     useEffect(() => {
         fetchUser();
@@ -113,48 +104,56 @@ export default function DashboardLayout({
         }
     };
 
-    return (
-        <div className="min-h-screen bg-gray-50 text-gray-900">
-            {/* Mobile Sidebar Backdrop */}
-            {sidebarOpen && (
-                <div
-                    className="fixed inset-0 z-40 bg-gray-900/50 backdrop-blur-sm lg:hidden"
-                    onClick={() => setSidebarOpen(false)}
-                />
-            )}
+    const getInitials = (name?: string) => {
+        if (!name) return 'U';
+        return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    };
 
-            {/* Sidebar */}
-            <aside
-                className={`fixed top-0 left-0 z-50 h-full w-72 bg-blue-600 shadow-xl transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-                    }`}
-            >
-                {/* Sidebar Header */}
-                <div className="flex items-center justify-between h-16 px-6 border-b border-white/10">
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-blue-600 shadow-sm">
-                            <span className="font-black text-xs italic">A</span>
+    const currentLabel = menuItems
+        .flatMap(m => (m as any).subItems ? (m as any).subItems : [m])
+        .find((m: any) => m.href === pathname)?.label || 'Dashboard';
+
+    return (
+        <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex' }}>
+
+            {/* ─── Sidebar — always visible ─── */}
+            <aside style={{
+                position: 'fixed', top: 0, left: 0, zIndex: 50,
+                height: '100%', width: '260px',
+                background: 'var(--sidebar-bg)',
+                borderRight: '1px solid var(--sidebar-border)',
+                boxShadow: 'var(--shadow-md)',
+                display: 'flex', flexDirection: 'column',
+            }}>
+                {/* Logo */}
+                <div style={{
+                    display: 'flex', alignItems: 'center',
+                    height: '64px', padding: '0 20px',
+                    borderBottom: '1px solid var(--border)',
+                    flexShrink: 0,
+                }}>
+                    <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
+                        <div style={{
+                            width: '34px', height: '34px', borderRadius: '10px',
+                            background: 'linear-gradient(135deg, #6366f1, #818cf8)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            boxShadow: '0 2px 8px rgba(99,102,241,0.35)', flexShrink: 0,
+                        }}>
+                            <span style={{ fontWeight: 900, fontSize: '14px', color: '#fff', fontStyle: 'italic' }}>A</span>
                         </div>
-                        <span className="text-xl font-black tracking-tighter text-white">ATKIS</span>
-                    </div>
-                    <button
-                        onClick={() => setSidebarOpen(false)}
-                        className="lg:hidden text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                        <X className="w-6 h-6" />
-                    </button>
+                        <span style={{ fontWeight: 800, fontSize: '17px', color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>ATKIS</span>
+                    </Link>
                 </div>
 
-                {/* Navigation */}
-                <nav className="p-4 space-y-1.5 overflow-y-auto max-h-[calc(100vh-140px)]">
+                {/* Nav */}
+                <nav style={{ flex: 1, padding: '12px', overflowY: 'auto' }}>
                     {menuItems.map((item) => {
                         let renderItem: any = { ...item };
 
-                        // Role-based filtering for top-level items
                         if (renderItem.roles && user?.role && !renderItem.roles.includes(user.role)) {
                             return null;
                         }
 
-                        // Filter sub-items by role
                         if (renderItem.subItems) {
                             const filteredSubItems = renderItem.subItems.filter((sub: any) =>
                                 !sub.roles || (user?.role && sub.roles.includes(user.role))
@@ -165,40 +164,82 @@ export default function DashboardLayout({
 
                         const hasSubItems = !!renderItem.subItems;
                         const isOpen = openMenus.includes(renderItem.label);
-                        const isActive = pathname === renderItem.href || (renderItem.subItems?.some((sub: any) => pathname === sub.href));
+                        const isActive = pathname === renderItem.href ||
+                            (renderItem.subItems?.some((sub: any) => pathname === sub.href));
 
                         if (hasSubItems) {
                             return (
-                                <div key={renderItem.label} className="space-y-1">
+                                <div key={renderItem.label} style={{ marginBottom: '2px' }}>
                                     <button
                                         onClick={() => toggleMenu(renderItem.label)}
-                                        className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 group ${isActive && !isOpen
-                                            ? 'bg-white/20 text-white'
-                                            : 'text-blue-50 hover:text-white hover:bg-white/10'
-                                            }`}
+                                        style={{
+                                            width: '100%', display: 'flex', alignItems: 'center',
+                                            justifyContent: 'space-between', gap: '10px',
+                                            padding: '9px 12px', borderRadius: '9px',
+                                            border: 'none', cursor: 'pointer', textAlign: 'left',
+                                            background: isActive && !isOpen ? 'var(--sidebar-active-bg)' : 'transparent',
+                                            color: isActive && !isOpen ? 'var(--sidebar-active-text)' : 'var(--sidebar-text)',
+                                            transition: 'all 0.15s ease',
+                                        }}
+                                        onMouseEnter={e => {
+                                            if (!(isActive && !isOpen)) {
+                                                (e.currentTarget as HTMLElement).style.background = 'var(--sidebar-hover-bg)';
+                                                (e.currentTarget as HTMLElement).style.color = 'var(--text-primary)';
+                                            }
+                                        }}
+                                        onMouseLeave={e => {
+                                            if (!(isActive && !isOpen)) {
+                                                (e.currentTarget as HTMLElement).style.background = 'transparent';
+                                                (e.currentTarget as HTMLElement).style.color = 'var(--sidebar-text)';
+                                            }
+                                        }}
                                     >
-                                        <div className="flex items-center gap-3">
-                                            <renderItem.icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-blue-200/60 group-hover:text-white'}`} />
-                                            <span className="font-medium">{renderItem.label}</span>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <renderItem.icon style={{ width: '16px', height: '16px', flexShrink: 0 }} />
+                                            <span style={{ fontSize: '13.5px', fontWeight: 500 }}>{renderItem.label}</span>
                                         </div>
-                                        <ChevronRight className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-90 text-white' : 'text-blue-200/40'}`} />
+                                        <ChevronRight style={{
+                                            width: '14px', height: '14px', flexShrink: 0,
+                                            transform: isOpen ? 'rotate(90deg)' : 'none',
+                                            transition: 'transform 0.2s ease',
+                                            color: isOpen ? 'var(--primary)' : 'var(--text-muted)',
+                                        }} />
                                     </button>
 
                                     {isOpen && (
-                                        <div className="pl-4 space-y-1">
+                                        <div style={{ paddingLeft: '12px', marginTop: '2px', paddingBottom: '4px' }}>
                                             {renderItem.subItems?.map((sub: any) => {
                                                 const isSubActive = pathname === sub.href;
                                                 return (
                                                     <Link
                                                         key={sub.label}
                                                         href={sub.href}
-                                                        className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-all duration-200 group ${isSubActive
-                                                            ? 'bg-white text-blue-600 font-bold'
-                                                            : 'text-blue-50/70 hover:text-white hover:bg-white/10'
-                                                            }`}
+                                                        style={{
+                                                            display: 'flex', alignItems: 'center', gap: '10px',
+                                                            padding: '8px 12px', borderRadius: '8px',
+                                                            marginBottom: '1px', textDecoration: 'none',
+                                                            background: isSubActive ? 'var(--sidebar-active-bg)' : 'transparent',
+                                                            color: isSubActive ? 'var(--sidebar-active-text)' : 'var(--sidebar-text)',
+                                                            fontWeight: isSubActive ? 600 : 400,
+                                                            fontSize: '13px',
+                                                            transition: 'all 0.15s ease',
+                                                            borderLeft: isSubActive ? '2px solid var(--primary)' : '2px solid transparent',
+                                                        }}
+                                                        onMouseEnter={e => {
+                                                            if (!isSubActive) {
+                                                                (e.currentTarget as HTMLElement).style.background = 'var(--sidebar-hover-bg)';
+                                                                (e.currentTarget as HTMLElement).style.color = 'var(--text-primary)';
+                                                            }
+                                                        }}
+                                                        onMouseLeave={e => {
+                                                            if (!isSubActive) {
+                                                                (e.currentTarget as HTMLElement).style.background = 'transparent';
+                                                                (e.currentTarget as HTMLElement).style.color = 'var(--sidebar-text)';
+                                                            }
+                                                        }}
                                                     >
-                                                        <sub.icon className={`w-4 h-4 ${isSubActive ? 'text-blue-600' : 'text-blue-200/40 group-hover:text-white'}`} />
-                                                        <span className="text-sm">{sub.label}</span>
+                                                        <sub.icon style={{ width: '14px', height: '14px', flexShrink: 0 }} />
+                                                        <span>{sub.label}</span>
                                                     </Link>
                                                 );
                                             })}
@@ -212,101 +253,219 @@ export default function DashboardLayout({
                             <Link
                                 key={renderItem.label}
                                 href={renderItem.href || '#'}
-                                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 group ${isActive
-                                    ? 'bg-white/20 text-white font-bold'
-                                    : 'text-blue-50/80 hover:text-white hover:bg-white/10'
-                                    }`}
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: '10px',
+                                    padding: '9px 12px', borderRadius: '9px',
+                                    marginBottom: '2px', textDecoration: 'none',
+                                    background: isActive ? 'var(--sidebar-active-bg)' : 'transparent',
+                                    color: isActive ? 'var(--sidebar-active-text)' : 'var(--sidebar-text)',
+                                    fontWeight: isActive ? 600 : 500,
+                                    fontSize: '13.5px',
+                                    transition: 'all 0.15s ease',
+                                }}
+                                onMouseEnter={e => {
+                                    if (!isActive) {
+                                        (e.currentTarget as HTMLElement).style.background = 'var(--sidebar-hover-bg)';
+                                        (e.currentTarget as HTMLElement).style.color = 'var(--text-primary)';
+                                    }
+                                }}
+                                onMouseLeave={e => {
+                                    if (!isActive) {
+                                        (e.currentTarget as HTMLElement).style.background = 'transparent';
+                                        (e.currentTarget as HTMLElement).style.color = 'var(--sidebar-text)';
+                                    }
+                                }}
                             >
-                                <renderItem.icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-blue-200/60 group-hover:text-white'}`} />
-                                <span className="font-medium">{renderItem.label}</span>
+                                <renderItem.icon style={{ width: '16px', height: '16px', flexShrink: 0 }} />
+                                <span>{renderItem.label}</span>
                             </Link>
                         );
                     })}
                 </nav>
 
-                {/* Sidebar Footer */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10">
+                {/* Footer */}
+                <div style={{ padding: '12px', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
+                    <div style={{
+                        display: 'flex', alignItems: 'center', gap: '10px',
+                        padding: '10px 12px', marginBottom: '6px', borderRadius: '10px',
+                        background: 'var(--bg)',
+                    }}>
+                        <div style={{
+                            width: '32px', height: '32px', borderRadius: '50%', flexShrink: 0,
+                            background: 'linear-gradient(135deg, #6366f1, #818cf8)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>
+                            <span style={{ fontSize: '11px', fontWeight: 700, color: '#fff' }}>
+                                {getInitials(user?.name)}
+                            </span>
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                            <p style={{
+                                fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)',
+                                margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                            }}>
+                                {user?.name || 'User'}
+                            </p>
+                            <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0, textTransform: 'capitalize' }}>
+                                {user?.role || '—'}
+                            </p>
+                        </div>
+                    </div>
                     <button
                         onClick={handleLogout}
-                        className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-blue-50 hover:text-white hover:bg-red-500 transition-all duration-200 font-bold"
+                        style={{
+                            display: 'flex', alignItems: 'center', gap: '10px',
+                            width: '100%', padding: '9px 12px', borderRadius: '9px',
+                            border: 'none', cursor: 'pointer', textAlign: 'left',
+                            background: 'transparent', color: 'var(--text-secondary)',
+                            fontSize: '13.5px', fontWeight: 500, transition: 'all 0.15s ease',
+                        }}
+                        onMouseEnter={e => {
+                            (e.currentTarget as HTMLElement).style.background = 'var(--danger-light)';
+                            (e.currentTarget as HTMLElement).style.color = 'var(--danger)';
+                        }}
+                        onMouseLeave={e => {
+                            (e.currentTarget as HTMLElement).style.background = 'transparent';
+                            (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)';
+                        }}
                     >
-                        <LogOut className="w-5 h-5" />
-                        <span>Logout</span>
+                        <LogOut style={{ width: '16px', height: '16px' }} />
+                        <span>Keluar</span>
                     </button>
                 </div>
             </aside>
 
-            {/* Main Content */}
-            <div className="lg:ml-72">
-                {/* Header */}
-                <header className="sticky top-0 z-30 h-16 bg-blue-600 text-white shadow-lg shadow-blue-200">
-                    <div className="flex items-center justify-between h-full px-4 lg:px-8">
-                        {/* Left Side */}
-                        <div className="flex items-center gap-4">
-                            <button
-                                onClick={() => setSidebarOpen(true)}
-                                className="lg:hidden text-white hover:bg-white/10 p-2 rounded-lg"
-                            >
-                                <Menu className="w-6 h-6" />
-                            </button>
+            {/* ─── Main Area ─── */}
+            <div style={{ marginLeft: '260px', flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
 
-                            {/* Search */}
-                            <div className="hidden md:flex items-center gap-3 px-4 py-2 bg-white/10 rounded-lg border border-white/20 focus-within:bg-white/20 focus-within:border-white transition-all">
-                                <Search className="w-5 h-5 text-white/70" />
-                                <input
-                                    type="text"
-                                    placeholder="Search..."
-                                    className="bg-transparent border-none outline-none text-white placeholder-white/60 w-64 text-sm"
-                                />
-                            </div>
+                {/* Header */}
+                <header style={{
+                    position: 'sticky', top: 0, zIndex: 30, height: '64px',
+                    background: 'var(--surface)',
+                    borderBottom: '1px solid var(--border)',
+                    boxShadow: 'var(--shadow-sm)',
+                    display: 'flex', alignItems: 'center',
+                    flexShrink: 0,
+                }}>
+                    <div style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        width: '100%', padding: '0 20px',
+                    }}>
+                        {/* Breadcrumb */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>ATKIS</span>
+                            <span style={{ color: 'var(--border-strong)' }}>›</span>
+                            <span style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: 600 }}>
+                                {currentLabel}
+                            </span>
                         </div>
 
-                        {/* Right Side */}
-                        <div className="flex items-center gap-4">
-                            {/* User Menu */}
-                            <div className="relative">
-                                <button
-                                    onClick={() => setUserMenuOpen(!userMenuOpen)}
-                                    className="flex items-center gap-3 pl-3 pr-2 py-1.5 rounded-lg hover:bg-white/10 transition-colors border border-transparent hover:border-white/20"
-                                >
-                                    <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-blue-600 font-bold text-sm">
-                                        {user?.avatar || (user?.name ? user.name.charAt(0).toUpperCase() : 'U')}
-                                    </div>
-                                    <div className="hidden md:block text-left">
-                                        <p className="text-sm font-bold text-white leading-tight">{user?.name || 'User'}</p>
-                                        <p className="text-[10px] text-white/70 font-bold uppercase tracking-widest">{user?.role || 'Role'}</p>
-                                    </div>
-                                    <ChevronDown className="w-4 h-4 text-white/70" />
-                                </button>
+                        {/* User Dropdown */}
+                        <div style={{ position: 'relative' }}>
+                            <button
+                                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: '8px',
+                                    padding: '6px 10px 6px 6px', borderRadius: '10px',
+                                    border: '1px solid var(--border)', cursor: 'pointer',
+                                    background: 'var(--surface)', transition: 'all 0.15s ease',
+                                }}
+                                onMouseEnter={e => {
+                                    (e.currentTarget as HTMLElement).style.background = 'var(--bg)';
+                                    (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-strong)';
+                                }}
+                                onMouseLeave={e => {
+                                    (e.currentTarget as HTMLElement).style.background = 'var(--surface)';
+                                    (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)';
+                                }}
+                            >
+                                <div style={{
+                                    width: '30px', height: '30px', borderRadius: '50%', flexShrink: 0,
+                                    background: 'linear-gradient(135deg, #6366f1, #818cf8)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                }}>
+                                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#fff' }}>
+                                        {getInitials(user?.name)}
+                                    </span>
+                                </div>
+                                <div style={{ textAlign: 'left' }}>
+                                    <p style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-primary)', margin: 0, lineHeight: 1.3 }}>
+                                        {user?.name || 'User'}
+                                    </p>
+                                    <p style={{ fontSize: '10px', color: 'var(--text-muted)', margin: 0, textTransform: 'capitalize' }}>
+                                        {user?.role || '—'}
+                                    </p>
+                                </div>
+                                <ChevronDown style={{
+                                    width: '14px', height: '14px', color: 'var(--text-muted)',
+                                    transform: userMenuOpen ? 'rotate(180deg)' : 'none',
+                                    transition: 'transform 0.2s ease',
+                                }} />
+                            </button>
 
-                                {userMenuOpen && (
-                                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl border border-gray-100 shadow-lg py-1">
-                                        <div className="px-4 py-2 border-b border-gray-50 md:hidden">
-                                            <p className="text-sm font-medium text-gray-900">{user?.name}</p>
-                                            <p className="text-xs text-gray-500">{user?.email}</p>
+                            {userMenuOpen && (
+                                <>
+                                    <div onClick={() => setUserMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 10 }} />
+                                    <div className="animate-scale-in" style={{
+                                        position: 'absolute', right: 0, top: 'calc(100% + 8px)', zIndex: 20,
+                                        width: '200px', background: 'var(--surface)',
+                                        borderRadius: 'var(--radius-md)', border: '1px solid var(--border)',
+                                        boxShadow: 'var(--shadow-lg)', overflow: 'hidden', padding: '6px',
+                                    }}>
+                                        <div style={{ padding: '10px 12px', marginBottom: '4px', borderRadius: '8px', background: 'var(--bg)' }}>
+                                            <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{user?.name}</p>
+                                            <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0 }}>{user?.email}</p>
                                         </div>
                                         <Link
                                             href="/dashboard/settings"
-                                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                            onClick={() => setUserMenuOpen(false)}
+                                            style={{
+                                                display: 'flex', alignItems: 'center', gap: '8px',
+                                                padding: '8px 12px', borderRadius: '8px',
+                                                fontSize: '13px', color: 'var(--text-secondary)',
+                                                textDecoration: 'none', transition: 'all 0.15s ease',
+                                            }}
+                                            onMouseEnter={e => {
+                                                (e.currentTarget as HTMLElement).style.background = 'var(--sidebar-hover-bg)';
+                                                (e.currentTarget as HTMLElement).style.color = 'var(--text-primary)';
+                                            }}
+                                            onMouseLeave={e => {
+                                                (e.currentTarget as HTMLElement).style.background = 'transparent';
+                                                (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)';
+                                            }}
                                         >
+                                            <Settings style={{ width: '14px', height: '14px' }} />
                                             Settings
                                         </Link>
-                                        <div className="border-t border-gray-100 my-1"></div>
+                                        <div style={{ height: '1px', background: 'var(--border)', margin: '4px 0' }} />
                                         <button
                                             onClick={handleLogout}
-                                            className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                                            style={{
+                                                display: 'flex', alignItems: 'center', gap: '8px',
+                                                width: '100%', padding: '8px 12px', borderRadius: '8px',
+                                                border: 'none', cursor: 'pointer', textAlign: 'left',
+                                                fontSize: '13px', color: 'var(--danger)',
+                                                background: 'transparent', transition: 'all 0.15s ease',
+                                            }}
+                                            onMouseEnter={e => {
+                                                (e.currentTarget as HTMLElement).style.background = 'var(--danger-light)';
+                                            }}
+                                            onMouseLeave={e => {
+                                                (e.currentTarget as HTMLElement).style.background = 'transparent';
+                                            }}
                                         >
+                                            <LogOut style={{ width: '14px', height: '14px' }} />
                                             Logout
                                         </button>
                                     </div>
-                                )}
-                            </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 </header>
 
                 {/* Page Content */}
-                <main className="p-4 lg:p-8">
+                <main style={{ flex: 1, padding: '28px 28px' }}>
                     {children}
                 </main>
             </div>

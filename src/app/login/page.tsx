@@ -41,104 +41,221 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 relative overflow-hidden">
-            {/* Background Decorative Elements */}
-            <div className="absolute top-0 left-0 w-96 h-96 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse transition-all duration-1000"></div>
-            <div className="absolute top-0 right-0 w-96 h-96 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse transition-all duration-1000 delay-300"></div>
-            <div className="absolute -bottom-8 left-20 w-96 h-96 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse transition-all duration-1000 delay-700"></div>
+        <div style={{
+            minHeight: '100vh',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative',
+            overflow: 'hidden',
+            background: 'linear-gradient(135deg, #f0f4ff 0%, #e8eeff 40%, #f5f0ff 100%)'
+        }}>
+            {/* Decorative blobs */}
+            <div style={{
+                position: 'absolute', top: '-80px', left: '-80px',
+                width: '360px', height: '360px', borderRadius: '50%',
+                background: 'radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)',
+                animation: 'pulse 6s ease-in-out infinite'
+            }} />
+            <div style={{
+                position: 'absolute', bottom: '-100px', right: '-60px',
+                width: '400px', height: '400px', borderRadius: '50%',
+                background: 'radial-gradient(circle, rgba(167,139,250,0.10) 0%, transparent 70%)',
+                animation: 'pulse 8s ease-in-out infinite 2s'
+            }} />
+            <div style={{
+                position: 'absolute', top: '40%', right: '15%',
+                width: '200px', height: '200px', borderRadius: '50%',
+                background: 'radial-gradient(circle, rgba(99,102,241,0.07) 0%, transparent 70%)',
+                animation: 'pulse 7s ease-in-out infinite 1s'
+            }} />
 
-            {/* Login Card */}
-            <div className="w-full max-w-sm mx-4 relative z-10">
-                <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white p-8 transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
+            {/* Card */}
+            <div className="animate-fade-in" style={{
+                width: '100%', maxWidth: '400px',
+                margin: '0 16px',
+                position: 'relative', zIndex: 10
+            }}>
+                <div style={{
+                    background: 'rgba(255,255,255,0.85)',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
+                    borderRadius: '24px',
+                    border: '1px solid rgba(255,255,255,0.9)',
+                    boxShadow: '0 20px 60px rgba(99,102,241,0.08), 0 4px 16px rgba(0,0,0,0.06)',
+                    padding: '40px 36px'
+                }}>
                     {/* Header */}
-                    <div className="text-center mb-8">
-                        <div className="mx-auto w-16 h-16 bg-gradient-to-tr from-blue-600 to-blue-400 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30 mb-6 transform rotate-3 hover:rotate-0 transition-transform duration-300">
-                            <span className="text-3xl font-bold text-white tracking-wider">A</span>
+                    <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+                        <div style={{
+                            width: '56px', height: '56px', borderRadius: '16px',
+                            background: 'linear-gradient(135deg, #6366f1, #818cf8)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            margin: '0 auto 16px',
+                            boxShadow: '0 8px 24px rgba(99,102,241,0.3)',
+                        }}>
+                            <span style={{ fontSize: '24px', fontWeight: 900, color: '#fff', fontStyle: 'italic' }}>A</span>
                         </div>
-                        <h1 className="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-blue-500 mb-2">
+                        <h1 style={{
+                            fontSize: '26px', fontWeight: 800, margin: '0 0 6px',
+                            background: 'linear-gradient(135deg, #4f46e5, #6366f1)',
+                            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                            backgroundClip: 'text', letterSpacing: '-0.5px'
+                        }}>
                             ATKIS
                         </h1>
-                        <p className="text-sm text-gray-500 font-medium">Silakan masuk ke akun Anda</p>
+                        <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', margin: 0, fontWeight: 400 }}>
+                            Silakan masuk ke akun Anda
+                        </p>
                     </div>
 
-                    {/* Error Alert */}
+                    {/* Error */}
                     {error && (
-                        <div className="mb-6 p-4 rounded-xl bg-red-50/80 backdrop-blur-sm border border-red-100 text-red-600 text-sm font-medium flex items-center">
-                            <span className="w-full text-center">{error}</span>
+                        <div className="animate-fade-in" style={{
+                            marginBottom: '20px', padding: '12px 16px', borderRadius: '10px',
+                            background: 'var(--danger-light)', border: '1px solid var(--danger-border)',
+                            color: 'var(--danger)', fontSize: '13px', fontWeight: 500, textAlign: 'center'
+                        }}>
+                            {error}
                         </div>
                     )}
 
-                    {/* Login Form */}
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                        {/* Email Field */}
-                        <div className="space-y-1.5">
-                            <label htmlFor="email" className="block text-sm font-semibold text-gray-700">
+                    {/* Form */}
+                    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                        {/* Email */}
+                        <div>
+                            <label htmlFor="email" style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '7px' }}>
                                 Email
                             </label>
-                            <div className="relative group">
-                                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-500 transition-colors">
-                                    <Mail className="w-5 h-5" />
-                                </div>
+                            <div style={{ position: 'relative' }}>
+                                <Mail style={{
+                                    position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)',
+                                    width: '16px', height: '16px', color: 'var(--text-muted)', pointerEvents: 'none'
+                                }} />
                                 <input
                                     id="email"
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full pl-11 pr-4 py-2.5 text-sm bg-white/50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all shadow-sm"
-                                    placeholder="admin@example.com"
                                     required
+                                    placeholder="admin@example.com"
+                                    style={{
+                                        width: '100%', paddingLeft: '40px', paddingRight: '14px',
+                                        paddingTop: '10px', paddingBottom: '10px',
+                                        fontSize: '13.5px', borderRadius: '10px',
+                                        border: '1.5px solid var(--border)', background: 'var(--surface)',
+                                        color: 'var(--text-primary)', outline: 'none',
+                                        transition: 'border-color 0.2s ease, box-shadow 0.2s ease'
+                                    }}
+                                    onFocus={e => {
+                                        e.currentTarget.style.borderColor = 'var(--primary)';
+                                        e.currentTarget.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.1)';
+                                    }}
+                                    onBlur={e => {
+                                        e.currentTarget.style.borderColor = 'var(--border)';
+                                        e.currentTarget.style.boxShadow = 'none';
+                                    }}
                                 />
                             </div>
                         </div>
 
-                        {/* Password Field */}
-                        <div className="space-y-1.5">
-                            <label htmlFor="password" className="block text-sm font-semibold text-gray-700">
+                        {/* Password */}
+                        <div>
+                            <label htmlFor="password" style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '7px' }}>
                                 Password
                             </label>
-                            <div className="relative group">
-                                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-500 transition-colors">
-                                    <Lock className="w-5 h-5" />
-                                </div>
+                            <div style={{ position: 'relative' }}>
+                                <Lock style={{
+                                    position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)',
+                                    width: '16px', height: '16px', color: 'var(--text-muted)', pointerEvents: 'none'
+                                }} />
                                 <input
                                     id="password"
                                     type={showPassword ? 'text' : 'password'}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full pl-11 pr-11 py-2.5 text-sm bg-white/50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all shadow-sm"
-                                    placeholder="••••••••"
                                     required
+                                    placeholder="••••••••"
+                                    style={{
+                                        width: '100%', paddingLeft: '40px', paddingRight: '44px',
+                                        paddingTop: '10px', paddingBottom: '10px',
+                                        fontSize: '13.5px', borderRadius: '10px',
+                                        border: '1.5px solid var(--border)', background: 'var(--surface)',
+                                        color: 'var(--text-primary)', outline: 'none',
+                                        transition: 'border-color 0.2s ease, box-shadow 0.2s ease'
+                                    }}
+                                    onFocus={e => {
+                                        e.currentTarget.style.borderColor = 'var(--primary)';
+                                        e.currentTarget.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.1)';
+                                    }}
+                                    onBlur={e => {
+                                        e.currentTarget.style.borderColor = 'var(--border)';
+                                        e.currentTarget.style.boxShadow = 'none';
+                                    }}
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-blue-500 transition-colors"
+                                    style={{
+                                        position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                                        background: 'none', border: 'none', cursor: 'pointer',
+                                        color: 'var(--text-muted)', padding: '2px',
+                                        display: 'flex', alignItems: 'center'
+                                    }}
                                 >
-                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                    {showPassword ? <EyeOff style={{ width: '16px', height: '16px' }} /> : <Eye style={{ width: '16px', height: '16px' }} />}
                                 </button>
                             </div>
                         </div>
 
                         {/* Remember & Forgot */}
-                        <div className="flex items-center justify-between text-sm mt-2">
-                            <label className="flex items-center gap-2.5 text-gray-600 cursor-pointer group">
-                                <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 transition-colors cursor-pointer" />
-                                <span className="group-hover:text-gray-900 transition-colors">Ingat saya</span>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                                <input
+                                    type="checkbox"
+                                    style={{
+                                        width: '15px', height: '15px',
+                                        accentColor: 'var(--primary)', cursor: 'pointer'
+                                    }}
+                                />
+                                <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Ingat saya</span>
                             </label>
-                            <a href="#" className="font-medium text-blue-600 hover:text-blue-700 transition-colors">
+                            <a href="#" style={{ fontSize: '13px', color: 'var(--primary)', fontWeight: 500, textDecoration: 'none' }}
+                                onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
+                                onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
+                            >
                                 Lupa password?
                             </a>
                         </div>
 
-                        {/* Submit Button */}
+                        {/* Submit */}
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white text-sm font-semibold rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all shadow-lg shadow-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transform hover:-translate-y-0.5 active:translate-y-0"
+                            style={{
+                                width: '100%', padding: '11px',
+                                background: isLoading ? '#a5b4fc' : 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                                color: '#fff', fontWeight: 600, fontSize: '14px',
+                                borderRadius: '10px', border: 'none', cursor: isLoading ? 'not-allowed' : 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                                boxShadow: isLoading ? 'none' : '0 4px 14px rgba(99,102,241,0.3)',
+                                transition: 'all 0.2s ease',
+                                marginTop: '4px'
+                            }}
+                            onMouseEnter={e => {
+                                if (!isLoading) {
+                                    (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)';
+                                    (e.currentTarget as HTMLElement).style.boxShadow = '0 6px 20px rgba(99,102,241,0.4)';
+                                }
+                            }}
+                            onMouseLeave={e => {
+                                (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+                                (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 14px rgba(99,102,241,0.3)';
+                            }}
                         >
                             {isLoading ? (
                                 <>
-                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                    <Loader2 style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} />
                                     Memproses...
                                 </>
                             ) : (
@@ -148,20 +265,37 @@ export default function LoginPage() {
                     </form>
 
                     {/* Demo Credentials */}
-                    <div className="mt-8 pt-5 border-t border-gray-100/80">
-                        <p className="text-xs font-semibold text-gray-400 text-center mb-3 uppercase tracking-wider">Demo Credentials</p>
-                        <div className="bg-blue-50/50 rounded-lg p-3 text-xs text-center text-gray-600 space-y-1 font-medium border border-blue-100/50">
-                            <p>Email: <span className="text-blue-700">admin@example.com</span></p>
-                            <p>Password: <span className="text-blue-700">password123</span></p>
+                    <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid var(--border)' }}>
+                        <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textAlign: 'center', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                            Demo Credentials
+                        </p>
+                        <div style={{
+                            background: 'var(--primary-light)', borderRadius: '10px',
+                            padding: '12px 16px', fontSize: '12.5px', textAlign: 'center',
+                            color: 'var(--text-secondary)', lineHeight: 1.8,
+                            border: '1px solid var(--primary-border)'
+                        }}>
+                            <p style={{ margin: 0 }}>Email: <span style={{ color: 'var(--primary)', fontWeight: 600 }}>admin@example.com</span></p>
+                            <p style={{ margin: 0 }}>Password: <span style={{ color: 'var(--primary)', fontWeight: 600 }}>password123</span></p>
                         </div>
                     </div>
                 </div>
 
-                {/* Footer */}
-                <p className="text-center text-blue-900/40 text-xs mt-8 font-medium">
+                {/* Footer note */}
+                <p style={{ textAlign: 'center', fontSize: '12px', color: 'rgba(99,102,241,0.5)', marginTop: '20px', fontWeight: 500 }}>
                     © {new Date().getFullYear()} ATKIS. All rights reserved.
                 </p>
             </div>
+
+            <style>{`
+              @keyframes pulse {
+                0%, 100% { transform: scale(1); opacity: 1; }
+                50% { transform: scale(1.05); opacity: 0.8; }
+              }
+              @keyframes spin {
+                to { transform: rotate(360deg); }
+              }
+            `}</style>
         </div>
     );
 }

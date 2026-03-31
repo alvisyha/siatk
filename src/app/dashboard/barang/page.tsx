@@ -462,107 +462,57 @@ export default function DataBarangPage() {
     };
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
+        <div className="space-y-6">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Data Barang</h1>
-                    <p className="text-gray-500 text-sm mt-1">Kelola data master barang dan pantau stok</p>
+                    <h1 className="text-xl font-bold" style={{color:'var(--text-primary)'}}>Data Barang</h1>
+                    <p className="text-sm mt-1" style={{color:'var(--text-secondary)'}}>Kelola data master barang dan pantau stok</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                    <input 
-                        type="file" 
-                        accept=".xlsx, .xls" 
-                        className="hidden" 
-                        id="import-excel" 
-                        onChange={handleFileUpload}
-                    />
+                    <input type="file" accept=".xlsx, .xls" className="hidden" id="import-excel" onChange={handleFileUpload} />
                     {isAdmin && (
                         <div className="relative">
                             <button
                                 onClick={() => setIsImportDropdownOpen(!isImportDropdownOpen)}
-                                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-sm shadow-blue-200 font-medium"
+                                className="flex items-center gap-2 px-3.5 py-2 text-sm font-medium rounded-lg transition-all"
+                                style={{background:'var(--primary)',color:'#fff',boxShadow:'0 2px 8px rgba(99,102,241,0.25)',border:'none',cursor:'pointer'}}
                             >
                                 Import Excel
                                 <ChevronDown className={`w-4 h-4 transition-transform ${isImportDropdownOpen ? 'rotate-180' : ''}`} />
                             </button>
-                            
                             {isImportDropdownOpen && (
                                 <>
-                                    <div 
-                                        className="fixed inset-0 z-10" 
-                                        onClick={() => setIsImportDropdownOpen(false)}
-                                    />
-                                    <div className="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-20 py-1 overflow-hidden animate-in fade-in zoom-in duration-150">
-                                        <button
-                                            onClick={() => {
-                                                document.getElementById('import-excel')?.click();
-                                                setIsImportDropdownOpen(false);
-                                            }}
-                                            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors text-left"
-                                        >
-                                            Upload Excel
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                downloadExcelTemplate();
-                                                setIsImportDropdownOpen(false);
-                                            }}
-                                            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors text-left"
-                                        >
-                                            Download Template
-                                        </button>
+                                    <div className="fixed inset-0 z-10" onClick={() => setIsImportDropdownOpen(false)} />
+                                    <div className="absolute left-0 mt-2 w-44 rounded-xl z-20 py-1 overflow-hidden animate-scale-in" style={{background:'var(--surface)',border:'1px solid var(--border)',boxShadow:'var(--shadow-lg)'}}>
+                                        <button onClick={() => { document.getElementById('import-excel')?.click(); setIsImportDropdownOpen(false); }} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-left transition-colors" style={{color:'var(--text-secondary)'}} onMouseEnter={e=>(e.currentTarget.style.background='var(--primary-light)')} onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>Upload Excel</button>
+                                        <button onClick={() => { downloadExcelTemplate(); setIsImportDropdownOpen(false); }} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-left transition-colors" style={{color:'var(--text-secondary)'}} onMouseEnter={e=>(e.currentTarget.style.background='var(--primary-light)')} onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>Download Template</button>
                                     </div>
                                 </>
                             )}
                         </div>
                     )}
-                    
-                    {/* Export Dropdown */}
                     <div className="relative">
                         <button
                             onClick={() => setIsExportDropdownOpen(!isExportDropdownOpen)}
-                            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all shadow-sm shadow-red-200 font-medium"
+                            className="flex items-center gap-2 px-3.5 py-2 text-sm font-medium rounded-lg transition-all"
+                            style={{background:'var(--danger)',color:'#fff',boxShadow:'0 2px 8px rgba(220,38,38,0.2)',border:'none',cursor:'pointer'}}
                         >
                             Export
                             <ChevronDown className={`w-4 h-4 transition-transform ${isExportDropdownOpen ? 'rotate-180' : ''}`} />
                         </button>
-                        
                         {isExportDropdownOpen && (
                             <>
-                                <div 
-                                    className="fixed inset-0 z-10" 
-                                    onClick={() => setIsExportDropdownOpen(false)}
-                                />
-                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-20 py-1 overflow-hidden animate-in fade-in zoom-in duration-150">
-                                    <button
-                                        onClick={() => {
-                                            exportToPDF();
-                                            setIsExportDropdownOpen(false);
-                                        }}
-                                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors text-left"
-                                    >
-                                        Export PDF
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            exportToExcel();
-                                            setIsExportDropdownOpen(false);
-                                        }}
-                                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors text-left"
-                                    >
-                                        Export Excel
-                                    </button>
+                                <div className="fixed inset-0 z-10" onClick={() => setIsExportDropdownOpen(false)} />
+                                <div className="absolute right-0 mt-2 w-44 rounded-xl z-20 py-1 overflow-hidden animate-scale-in" style={{background:'var(--surface)',border:'1px solid var(--border)',boxShadow:'var(--shadow-lg)'}}>
+                                    <button onClick={() => { exportToPDF(); setIsExportDropdownOpen(false); }} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-left" style={{color:'var(--text-secondary)'}} onMouseEnter={e=>(e.currentTarget.style.background='var(--danger-light)')} onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>Export PDF</button>
+                                    <button onClick={() => { exportToExcel(); setIsExportDropdownOpen(false); }} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-left" style={{color:'var(--text-secondary)'}} onMouseEnter={e=>(e.currentTarget.style.background='var(--teal-light)')} onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>Export Excel</button>
                                 </div>
                             </>
                         )}
                     </div>
-
                     {isAdmin && (
-                        <button
-                            onClick={() => handleOpenModal()}
-                            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-sm shadow-blue-200 font-medium"
-                        >
+                        <button onClick={() => handleOpenModal()} className="flex items-center gap-2 px-3.5 py-2 text-sm font-medium rounded-lg" style={{background:'var(--primary)',color:'#fff',boxShadow:'0 2px 8px rgba(99,102,241,0.25)',border:'none',cursor:'pointer'}}>
                             <Plus className="w-4 h-4" />
                             Tambah Barang
                         </button>
@@ -571,165 +521,94 @@ export default function DataBarangPage() {
             </div>
 
             {/* Table Card */}
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden text-gray-900">
-                <div className="p-4 border-b border-gray-100 bg-gray-50/30 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                    <div className="relative flex-1 max-w-md">
-                        <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
+            <div className="rounded-xl overflow-hidden" style={{background:'var(--surface)',border:'1px solid var(--border)',boxShadow:'var(--shadow-sm)'}}>
+                <div className="p-4 flex flex-col sm:flex-row gap-3 items-start sm:items-center" style={{borderBottom:'1px solid var(--border)',background:'var(--bg)'}}>
+                    <div className="relative flex-1 max-w-sm">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{color:'var(--text-muted)'}} />
                         <input
                             type="text"
                             placeholder="Cari barang..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                            className="w-full pl-9 pr-4 py-2 text-sm rounded-lg outline-none transition-all"
+                            style={{background:'var(--surface)',border:'1.5px solid var(--border)',color:'var(--text-primary)'}}
+                            onFocus={e=>{e.currentTarget.style.borderColor='var(--primary)';e.currentTarget.style.boxShadow='0 0 0 3px rgba(99,102,241,0.1)';}}
+                            onBlur={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.boxShadow='none';}}
                         />
                     </div>
                 </div>
 
                 <div className="overflow-x-auto min-h-[400px]">
                     <table className="w-full text-left text-sm">
-                        <thead className="bg-gray-50 text-gray-600 font-medium border-b border-gray-200">
+                        <thead style={{background:'var(--bg)',borderBottom:'1px solid var(--border)'}}>
                             <tr>
-                                <th className="px-4 py-4 text-center w-14">No</th>
-                                <th 
-                                    className="px-4 py-4 cursor-pointer hover:bg-gray-100 transition-colors"
-                                    onClick={() => handleSort('kode')}
-                                >
-                                    <div className="flex items-center gap-1">
-                                        Kode
-                                        {sortConfig.key === 'kode' && sortConfig.direction ? (
-                                            sortConfig.direction === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
-                                        ) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
-                                    </div>
+                                <th className="px-4 py-3 text-center w-14" style={{fontSize:'12px',fontWeight:600,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.05em'}}>No</th>
+                                <th className="px-4 py-3 cursor-pointer transition-colors" style={{fontSize:'12px',fontWeight:600,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.05em'}} onClick={() => handleSort('kode')}>
+                                    <div className="flex items-center gap-1">Kode {sortConfig.key==='kode'&&sortConfig.direction?(sortConfig.direction==='asc'?<ArrowUp className="w-3 h-3"/>:<ArrowDown className="w-3 h-3"/>):<ArrowUpDown className="w-3 h-3"/>}</div>
                                 </th>
-                                <th 
-                                    className="px-6 py-4 cursor-pointer hover:bg-gray-100 transition-colors"
-                                    onClick={() => handleSort('nama')}
-                                >
-                                    <div className="flex items-center gap-1">
-                                        Nama Barang
-                                        {sortConfig.key === 'nama' && sortConfig.direction ? (
-                                            sortConfig.direction === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
-                                        ) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
-                                    </div>
+                                <th className="px-4 py-3 cursor-pointer transition-colors" style={{fontSize:'12px',fontWeight:600,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.05em'}} onClick={() => handleSort('nama')}>
+                                    <div className="flex items-center gap-1">Nama Barang {sortConfig.key==='nama'&&sortConfig.direction?(sortConfig.direction==='asc'?<ArrowUp className="w-3 h-3"/>:<ArrowDown className="w-3 h-3"/>):<ArrowUpDown className="w-3 h-3"/>}</div>
                                 </th>
-                                <th 
-                                    className="px-4 py-4 cursor-pointer hover:bg-gray-100 transition-colors"
-                                    onClick={() => handleSort('satuan.nama')}
-                                >
-                                    <div className="flex items-center gap-1">
-                                        Satuan
-                                        {sortConfig.key === 'satuan.nama' && sortConfig.direction ? (
-                                            sortConfig.direction === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
-                                        ) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
-                                    </div>
+                                <th className="px-4 py-3 cursor-pointer" style={{fontSize:'12px',fontWeight:600,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.05em'}} onClick={() => handleSort('satuan.nama')}>
+                                    <div className="flex items-center gap-1">Satuan {sortConfig.key==='satuan.nama'&&sortConfig.direction?(sortConfig.direction==='asc'?<ArrowUp className="w-3 h-3"/>:<ArrowDown className="w-3 h-3"/>):<ArrowUpDown className="w-3 h-3"/>}</div>
                                 </th>
-                                <th 
-                                    className="px-4 py-4 text-center cursor-pointer hover:bg-gray-100 transition-colors"
-                                    onClick={() => handleSort('stok')}
-                                >
-                                    <div className="flex items-center justify-center gap-1">
-                                        Stok
-                                        {sortConfig.key === 'stok' && sortConfig.direction ? (
-                                            sortConfig.direction === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
-                                        ) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
-                                    </div>
+                                <th className="px-4 py-3 text-center cursor-pointer" style={{fontSize:'12px',fontWeight:600,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.05em'}} onClick={() => handleSort('stok')}>
+                                    <div className="flex items-center justify-center gap-1">Stok {sortConfig.key==='stok'&&sortConfig.direction?(sortConfig.direction==='asc'?<ArrowUp className="w-3 h-3"/>:<ArrowDown className="w-3 h-3"/>):<ArrowUpDown className="w-3 h-3"/>}</div>
                                 </th>
-                                <th 
-                                    className="px-4 py-4 text-center cursor-pointer hover:bg-gray-100 transition-colors"
-                                    onClick={() => handleSort('stok_minimum')}
-                                >
-                                    <div className="flex items-center justify-center gap-1">
-                                        Stok Min.
-                                        {sortConfig.key === 'stok_minimum' && sortConfig.direction ? (
-                                            sortConfig.direction === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
-                                        ) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
-                                    </div>
+                                <th className="px-4 py-3 text-center cursor-pointer" style={{fontSize:'12px',fontWeight:600,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.05em'}} onClick={() => handleSort('stok_minimum')}>
+                                    <div className="flex items-center justify-center gap-1">Min {sortConfig.key==='stok_minimum'&&sortConfig.direction?(sortConfig.direction==='asc'?<ArrowUp className="w-3 h-3"/>:<ArrowDown className="w-3 h-3"/>):<ArrowUpDown className="w-3 h-3"/>}</div>
                                 </th>
-                                <th 
-                                    className="px-4 py-4 text-center cursor-pointer hover:bg-gray-100 transition-colors"
-                                    onClick={() => handleSort('status')}
-                                >
-                                    <div className="flex items-center justify-center gap-1">
-                                        Status
-                                        {sortConfig.key === 'status' && sortConfig.direction ? (
-                                            sortConfig.direction === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
-                                        ) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
-                                    </div>
+                                <th className="px-4 py-3 text-center cursor-pointer" style={{fontSize:'12px',fontWeight:600,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.05em'}} onClick={() => handleSort('status')}>
+                                    <div className="flex items-center justify-center gap-1">Status {sortConfig.key==='status'&&sortConfig.direction?(sortConfig.direction==='asc'?<ArrowUp className="w-3 h-3"/>:<ArrowDown className="w-3 h-3"/>):<ArrowUpDown className="w-3 h-3"/>}</div>
                                 </th>
-                                {isAdmin && <th className="px-4 py-4 text-center w-24">Aksi</th>}
+                                {isAdmin && <th className="px-4 py-3 text-center w-20" style={{fontSize:'12px',fontWeight:600,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.05em'}}>Aksi</th>}
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-200">
+                        <tbody style={{color:'var(--text-primary)'}}>
                             {isLoading ? (
-                                <tr>
-                                    <td colSpan={isAdmin ? 8 : 7} className="px-6 py-10 text-center text-gray-500">
-                                        <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3 text-blue-500" />
-                                        <p>Memuat data barang...</p>
-                                    </td>
-                                </tr>
+                                <tr><td colSpan={isAdmin ? 8 : 7} className="py-14 text-center" style={{color:'var(--text-muted)'}}>
+                                    <Loader2 className="w-7 h-7 animate-spin mx-auto mb-2" style={{color:'var(--primary)'}} />
+                                    <p className="text-sm">Memuat data...</p>
+                                </td></tr>
                             ) : filteredBarang.length === 0 ? (
-                                <tr>
-                                    <td colSpan={isAdmin ? 8 : 7} className="px-6 py-10 text-center text-gray-500">
-                                        <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                                            <Info className="w-6 h-6 text-gray-400" />
-                                        </div>
-                                        <p>Data barang kosong.</p>
-                                    </td>
-                                </tr>
+                                <tr><td colSpan={isAdmin ? 8 : 7} className="py-14 text-center" style={{color:'var(--text-muted)'}}>
+                                    <Info className="w-8 h-8 mx-auto mb-2" style={{color:'var(--text-muted)'}} />
+                                    <p className="text-sm">Data barang kosong.</p>
+                                </td></tr>
                             ) : (
                                 sortedBarang.map((item, index) => (
-                                    <tr key={item.id} className={`hover:bg-gray-50/50 transition-colors ${item.status === false ? 'opacity-50 bg-gray-100' : ''}`}>
-                                        <td className="px-4 py-4 text-center text-gray-500">{index + 1}</td>
-                                        <td className="px-4 py-4 font-mono text-xs text-blue-600 font-semibold">{item.kode || '-'}</td>
-                                        <td className="px-6 py-4">
-                                            <div className="font-medium text-gray-900">{item.nama}</div>
-                                            {item.deskripsi && <div className="text-xs text-gray-500 mt-0.5">{item.deskripsi}</div>}
+                                    <tr key={item.id} className="transition-colors" style={{borderTop:'1px solid var(--border)',opacity:item.status===false?0.55:1,background:item.status===false?'var(--bg)':'transparent'}} onMouseEnter={e=>(e.currentTarget.style.background='var(--bg)')} onMouseLeave={e=>(e.currentTarget.style.background=item.status===false?'var(--bg)':'transparent')}>
+                                        <td className="px-4 py-3.5 text-center text-xs" style={{color:'var(--text-muted)'}}>{index + 1}</td>
+                                        <td className="px-4 py-3.5 font-mono text-xs font-semibold" style={{color:'var(--primary)'}}>{item.kode || '-'}</td>
+                                        <td className="px-4 py-3.5">
+                                            <div className="font-medium text-sm" style={{color:'var(--text-primary)'}}>{item.nama}</div>
+                                            {item.deskripsi && <div className="text-xs mt-0.5" style={{color:'var(--text-muted)'}}>{item.deskripsi}</div>}
                                         </td>
-                                         <td className="px-4 py-4 text-gray-600">{item.satuan?.nama || '-'}</td>
-                                        <td className="px-4 py-4 text-center">
-                                            <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${getStokBadge(item)}`}>
-                                                {item.stok}
-                                            </span>
+                                        <td className="px-4 py-3.5 text-sm" style={{color:'var(--text-secondary)'}}>{item.satuan?.nama || '-'}</td>
+                                        <td className="px-4 py-3.5 text-center">
+                                            <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${getStokBadge(item)}`}>{item.stok}</span>
                                         </td>
-                                        <td className="px-4 py-4 text-center text-gray-600">{item.stok_minimum}</td>
-                                        <td className="px-4 py-4 text-center">
+                                        <td className="px-4 py-3.5 text-center text-sm" style={{color:'var(--text-secondary)'}}>{item.stok_minimum}</td>
+                                        <td className="px-4 py-3.5 text-center">
                                             {item.status === false ? (
-                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500 border border-gray-300">
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium" style={{background:'var(--bg)',color:'var(--text-muted)',border:'1px solid var(--border)'}}>
                                                     <Ban className="w-3 h-3" /> Nonaktif
                                                 </span>
                                             ) : (
-                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium" style={{background:'var(--teal-light)',color:'var(--teal)'}}>
                                                     Aktif
                                                 </span>
                                             )}
                                         </td>
                                         {isAdmin && (
-                                            <td className="px-4 py-4 text-center">
+                                            <td className="px-4 py-3.5 text-center">
                                                 <div className="flex items-center justify-center gap-1">
                                                     {item.status === false ? (
-                                                        <button
-                                                            onClick={() => handleReactivate(item)}
-                                                            className="px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 rounded-lg transition-all font-medium"
-                                                            title="Aktifkan Kembali"
-                                                        >
-                                                            Aktifkan
-                                                        </button>
+                                                        <button onClick={() => handleReactivate(item)} className="px-2.5 py-1 text-xs font-semibold rounded-lg transition-all" style={{color:'var(--primary)',background:'var(--primary-light)',border:'none',cursor:'pointer'}}>Aktifkan</button>
                                                     ) : (
                                                         <>
-                                                            <button
-                                                                onClick={() => handleOpenModal(item)}
-                                                                className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                                                                title="Edit Barang"
-                                                            >
-                                                                <Edit className="w-4 h-4" />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDeleteClick(item)}
-                                                                className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                                                                title="Hapus Barang"
-                                                            >
-                                                                <Trash2 className="w-4 h-4" />
-                                                            </button>
+                                                            <button onClick={() => handleOpenModal(item)} className="p-1.5 rounded-lg transition-all" style={{color:'var(--text-muted)',background:'transparent',border:'none',cursor:'pointer'}} title="Edit" onMouseEnter={e=>{(e.currentTarget as any).style.background='var(--primary-light)';(e.currentTarget as any).style.color='var(--primary)'}} onMouseLeave={e=>{(e.currentTarget as any).style.background='transparent';(e.currentTarget as any).style.color='var(--text-muted)'}}><Edit className="w-4 h-4" /></button>
+                                                            <button onClick={() => handleDeleteClick(item)} className="p-1.5 rounded-lg transition-all" style={{color:'var(--text-muted)',background:'transparent',border:'none',cursor:'pointer'}} title="Hapus" onMouseEnter={e=>{(e.currentTarget as any).style.background='var(--danger-light)';(e.currentTarget as any).style.color='var(--danger)'}} onMouseLeave={e=>{(e.currentTarget as any).style.background='transparent';(e.currentTarget as any).style.color='var(--text-muted)'}}><Trash2 className="w-4 h-4" /></button>
                                                         </>
                                                     )}
                                                 </div>
@@ -745,124 +624,61 @@ export default function DataBarangPage() {
 
             {/* Modal Add/Edit */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto">
-                        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
-                            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                                <Box className="w-5 h-5 text-blue-600" />
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pt-16 md:pt-4 pointer-events-none">
+                    <div className="w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto animate-scale-in pointer-events-auto" style={{background:'var(--surface)',borderRadius:'16px',boxShadow:'var(--shadow-lg)',border:'1px solid var(--border)'}}>
+                        <div className="px-6 py-4 flex items-center justify-between sticky top-0 z-10" style={{borderBottom:'1px solid var(--border)',background:'var(--surface)'}}>
+                            <h3 className="text-base font-bold flex items-center gap-2" style={{color:'var(--text-primary)'}}>
+                                <Box className="w-4 h-4" style={{color:'var(--primary)'}} />
                                 {editingItem ? 'Edit Barang' : 'Tambah Barang'}
                             </h3>
-                            <button onClick={handleCloseModal} className="text-gray-400 hover:text-gray-600">
-                                <X className="w-5 h-5" />
+                            <button onClick={handleCloseModal} className="p-1.5 rounded-lg transition-colors" style={{background:'transparent',border:'none',cursor:'pointer',color:'var(--text-muted)'}} onMouseEnter={e=>(e.currentTarget.style.background='var(--bg)')} onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
+                                <X className="w-4 h-4" />
                             </button>
                         </div>
-                        <form onSubmit={handleSave} className="p-6 space-y-4 text-left">
-                            <div className="grid grid-cols-1 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Nama Barang <span className="text-red-500">*</span></label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={formData.nama}
-                                        onChange={e => setFormData({ ...formData, nama: e.target.value })}
-                                        className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
-                                </div>
+                        <form onSubmit={handleSave} className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-xs font-semibold mb-1.5" style={{color:'var(--text-primary)'}}>Nama Barang <span style={{color:'var(--danger)'}}>*</span></label>
+                                <input type="text" required value={formData.nama} onChange={e=>setFormData({...formData,nama:e.target.value})} className="w-full px-3 py-2.5 text-sm rounded-lg outline-none transition-all" style={{border:'1.5px solid var(--border)',background:'var(--bg)',color:'var(--text-primary)',fontFamily:'inherit'}} onFocus={e=>{e.currentTarget.style.borderColor='var(--primary)';e.currentTarget.style.boxShadow='0 0 0 3px rgba(99,102,241,0.1)';}} onBlur={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.boxShadow='none';}} />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Kode Barang</label>
-                                    <input
-                                        type="text"
-                                        readOnly={!!editingItem}
-                                        value={formData.kode}
-                                        onChange={e => setFormData({ ...formData, kode: e.target.value })}
-                                        className={`w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                                            editingItem ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-gray-50'
-                                        }`}
-                                        placeholder="Otomatis (ATK-XXX)"
-                                        title={editingItem ? 'Kode barang tidak dapat diubah setelah dibuat' : 'Kode barang otomatis atau manual'}
-                                    />
+                                    <label className="block text-xs font-semibold mb-1.5" style={{color:'var(--text-primary)'}}>Kode Barang</label>
+                                    <input type="text" readOnly={!!editingItem} value={formData.kode} onChange={e=>setFormData({...formData,kode:e.target.value})} placeholder="Otomatis" title={editingItem?'Kode tidak bisa diubah':''} className="w-full px-3 py-2.5 text-sm rounded-lg outline-none transition-all" style={{border:'1.5px solid var(--border)',background:editingItem?'var(--bg)':'var(--surface)',color:editingItem?'var(--text-muted)':'var(--text-primary)',cursor:editingItem?'not-allowed':'text',fontFamily:'monospace'}} />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Satuan</label>
+                                    <label className="block text-xs font-semibold mb-1.5" style={{color:'var(--text-primary)'}}>Satuan</label>
                                     {editingItem ? (
-                                        <input
-                                            type="text"
-                                            readOnly
-                                            value={editingItem.satuan?.nama || '-'}
-                                            className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-500 cursor-not-allowed"
-                                        />
+                                        <input type="text" readOnly value={editingItem.satuan?.nama||'-'} className="w-full px-3 py-2.5 text-sm rounded-lg" style={{border:'1.5px solid var(--border)',background:'var(--bg)',color:'var(--text-muted)',cursor:'not-allowed',outline:'none'}} />
                                     ) : (
-                                        <select
-                                            value={formData.satuan_id}
-                                            onChange={e => setFormData({ ...formData, satuan_id: e.target.value })}
-                                            className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        >
+                                        <select value={formData.satuan_id} onChange={e=>setFormData({...formData,satuan_id:e.target.value})} className="w-full px-3 py-2.5 text-sm rounded-lg outline-none transition-all" style={{border:'1.5px solid var(--border)',background:'var(--bg)',color:'var(--text-primary)',fontFamily:'inherit'}} onFocus={e=>{e.currentTarget.style.borderColor='var(--primary)';}} onBlur={e=>{e.currentTarget.style.borderColor='var(--border)';}}>
                                             <option value="">-- Pilih Satuan --</option>
-                                            {satuanList.map(s => (
-                                                <option key={s.id} value={s.id}>{s.nama}</option>
-                                            ))}
+                                            {satuanList.map(s=>(<option key={s.id} value={s.id}>{s.nama}</option>))}
                                         </select>
                                     )}
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Stok Awal</label>
+                                    <label className="block text-xs font-semibold mb-1.5" style={{color:'var(--text-primary)'}}>Stok Awal</label>
                                     {editingItem ? (
-                                        <input
-                                            type="text"
-                                            readOnly
-                                            value={formData.stok}
-                                            className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-500 cursor-not-allowed"
-                                            title="Stok hanya bisa diubah melalui menu transaksi (Barang Masuk/Keluar)"
-                                        />
+                                        <input type="text" readOnly value={formData.stok} title="Ubah melalui transaksi" className="w-full px-3 py-2.5 text-sm rounded-lg" style={{border:'1.5px solid var(--border)',background:'var(--bg)',color:'var(--text-muted)',cursor:'not-allowed',outline:'none'}} />
                                     ) : (
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            value={formData.stok}
-                                            onChange={e => setFormData({ ...formData, stok: e.target.value })}
-                                            className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        />
+                                        <input type="number" min="0" value={formData.stok} onChange={e=>setFormData({...formData,stok:e.target.value})} className="w-full px-3 py-2.5 text-sm rounded-lg outline-none transition-all" style={{border:'1.5px solid var(--border)',background:'var(--bg)',color:'var(--text-primary)',fontFamily:'inherit'}} onFocus={e=>{e.currentTarget.style.borderColor='var(--primary)';e.currentTarget.style.boxShadow='0 0 0 3px rgba(99,102,241,0.1)';}} onBlur={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.boxShadow='none';}} />
                                     )}
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Stok Minimal</label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={formData.stok_minimum}
-                                        onChange={e => setFormData({ ...formData, stok_minimum: e.target.value })}
-                                        className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
+                                    <label className="block text-xs font-semibold mb-1.5" style={{color:'var(--text-primary)'}}>Stok Minimal</label>
+                                    <input type="number" min="0" value={formData.stok_minimum} onChange={e=>setFormData({...formData,stok_minimum:e.target.value})} className="w-full px-3 py-2.5 text-sm rounded-lg outline-none transition-all" style={{border:'1.5px solid var(--border)',background:'var(--bg)',color:'var(--text-primary)',fontFamily:'inherit'}} onFocus={e=>{e.currentTarget.style.borderColor='var(--primary)';e.currentTarget.style.boxShadow='0 0 0 3px rgba(99,102,241,0.1)';}} onBlur={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.boxShadow='none';}} />
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Deskripsi / Keterangan</label>
-                                <textarea
-                                    rows={3}
-                                    value={formData.deskripsi}
-                                    onChange={e => setFormData({ ...formData, deskripsi: e.target.value })}
-                                    className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
+                                <label className="block text-xs font-semibold mb-1.5" style={{color:'var(--text-primary)'}}>Deskripsi</label>
+                                <textarea rows={3} value={formData.deskripsi} onChange={e=>setFormData({...formData,deskripsi:e.target.value})} className="w-full px-3 py-2.5 text-sm rounded-lg outline-none transition-all resize-none" style={{border:'1.5px solid var(--border)',background:'var(--bg)',color:'var(--text-primary)',fontFamily:'inherit'}} onFocus={e=>{e.currentTarget.style.borderColor='var(--primary)';e.currentTarget.style.boxShadow='0 0 0 3px rgba(99,102,241,0.1)';}} onBlur={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.boxShadow='none';}} />
                             </div>
-                            <div className="pt-4 flex justify-end gap-3 border-t border-gray-100 mt-2">
-                                <button
-                                    type="button"
-                                    onClick={handleCloseModal}
-                                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                                >
-                                    Batal
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={isSaving}
-                                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-2"
-                                >
-                                    {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
-                                    Simpan
+                            <div className="flex justify-end gap-2 pt-3" style={{borderTop:'1px solid var(--border)'}}>
+                                <button type="button" onClick={handleCloseModal} className="px-4 py-2 text-sm font-medium rounded-lg transition-all" style={{background:'var(--bg)',color:'var(--text-secondary)',border:'1px solid var(--border)',cursor:'pointer'}} onMouseEnter={e=>(e.currentTarget.style.background='var(--border)')} onMouseLeave={e=>(e.currentTarget.style.background='var(--bg)')}>Batal</button>
+                                <button type="submit" disabled={isSaving} className="px-4 py-2 text-sm font-medium rounded-lg flex items-center gap-2 transition-all" style={{background:isSaving?'#a5b4fc':'var(--primary)',color:'#fff',border:'none',cursor:isSaving?'not-allowed':'pointer',boxShadow:'0 2px 8px rgba(99,102,241,0.25)'}}>
+                                    {isSaving&&<Loader2 className="w-4 h-4 animate-spin"/>}Simpan
                                 </button>
                             </div>
                         </form>
@@ -872,37 +688,24 @@ export default function DataBarangPage() {
 
             {/* Delete Confirmation Modal */}
             {isDeleteModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden p-6 text-center">
-                        <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <AlertCircle className="w-6 h-6" />
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pt-16 md:pt-4 pointer-events-none">
+                    <div className="w-full max-w-sm p-6 text-center animate-scale-in pointer-events-auto" style={{background:'var(--surface)',borderRadius:'16px',boxShadow:'var(--shadow-lg)',border:'1px solid var(--border)'}}>
+                        <div className="w-11 h-11 rounded-full flex items-center justify-center mx-auto mb-4" style={{background:'var(--danger-light)'}}>
+                            <AlertCircle className="w-5 h-5" style={{color:'var(--danger)'}} />
                         </div>
-                        <h3 className="text-lg font-bold text-gray-900 mb-2">Hapus Barang?</h3>
+                        <h3 className="text-base font-bold mb-2" style={{color:'var(--text-primary)'}}>Hapus Barang?</h3>
                         {deleteMessage ? (
-                            <div className="mb-6 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-700">
-                                {deleteMessage}
-                            </div>
+                            <div className="mb-5 p-3 rounded-lg text-sm" style={{background:'var(--amber-light)',border:'1px solid #fde68a',color:'var(--amber)'}}>{deleteMessage}</div>
                         ) : (
-                            <p className="text-gray-500 text-sm mb-6">
-                                Apakah Anda yakin ingin menghapus <span className="font-semibold text-gray-900">{itemToDelete?.nama}</span>?
-                                Jika barang sudah digunakan dalam transaksi, statusnya akan diubah menjadi nonaktif.
+                            <p className="text-sm mb-5" style={{color:'var(--text-secondary)'}}>
+                                Yakin hapus <span className="font-semibold" style={{color:'var(--text-primary)'}}>{itemToDelete?.nama}</span>? Jika sudah dipakai dalam transaksi, status akan diubah menjadi nonaktif.
                             </p>
                         )}
                         {!deleteMessage && (
-                            <div className="flex justify-center gap-3">
-                                <button
-                                    onClick={() => setIsDeleteModalOpen(false)}
-                                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                                >
-                                    Batal
-                                </button>
-                                <button
-                                    onClick={handleDeleteConfirm}
-                                    disabled={isSaving}
-                                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors flex items-center gap-2"
-                                >
-                                    {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
-                                    Hapus
+                            <div className="flex justify-center gap-2">
+                                <button onClick={()=>setIsDeleteModalOpen(false)} className="px-4 py-2 text-sm font-medium rounded-lg transition-all" style={{background:'var(--bg)',color:'var(--text-secondary)',border:'1px solid var(--border)',cursor:'pointer'}} onMouseEnter={e=>(e.currentTarget.style.background='var(--border)')} onMouseLeave={e=>(e.currentTarget.style.background='var(--bg)')}>Batal</button>
+                                <button onClick={handleDeleteConfirm} disabled={isSaving} className="px-4 py-2 text-sm font-medium rounded-lg flex items-center gap-2" style={{background:isSaving?'#fca5a5':'var(--danger)',color:'#fff',border:'none',cursor:isSaving?'not-allowed':'pointer',boxShadow:'0 2px 8px rgba(220,38,38,0.2)'}}>
+                                    {isSaving&&<Loader2 className="w-4 h-4 animate-spin"/>}Hapus
                                 </button>
                             </div>
                         )}
