@@ -165,7 +165,7 @@ export default function SupplierPage() {
                     </div>
                 </div>
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
+                    <table className="w-full text-left text-sm min-w-[800px]">
                         <thead style={{background:'var(--bg)',borderBottom:'1px solid var(--border)'}}>
                             <tr>
                                 <th className="px-5 py-3" style={{fontSize:'12px',fontWeight:600,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.05em'}}>Nama Supplier</th>

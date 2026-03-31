@@ -19,7 +19,9 @@ import {
     Truck,
     PackageCheck,
     FileText,
-    Ruler
+    Ruler,
+    Menu,
+    X
 } from 'lucide-react';
 
 interface User {
@@ -68,6 +70,7 @@ export default function DashboardLayout({
     const pathname = usePathname();
     const [user, setUser] = useState<User | null>(null);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [openMenus, setOpenMenus] = useState<string[]>(['Master Data', 'Transaksi']);
 
     useEffect(() => {
@@ -115,19 +118,23 @@ export default function DashboardLayout({
 
     return (
         <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex' }}>
+            {/* Mobile Backdrop */}
+            {isMobileMenuOpen && (
+                <div 
+                    className="fixed inset-0 z-40 bg-gray-900/50 backdrop-blur-sm md:hidden"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                />
+            )}
 
-            {/* ─── Sidebar — always visible ─── */}
-            <aside style={{
-                position: 'fixed', top: 0, left: 0, zIndex: 50,
-                height: '100%', width: '260px',
+            {/* ─── Sidebar ─── */}
+            <aside className={`fixed top-0 left-0 z-50 h-full w-[260px] flex flex-col transition-transform duration-300 ease-in-out md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`} style={{
                 background: 'var(--sidebar-bg)',
                 borderRight: '1px solid var(--sidebar-border)',
                 boxShadow: 'var(--shadow-md)',
-                display: 'flex', flexDirection: 'column',
             }}>
-                {/* Logo */}
+                {/* Logo & Mobile Close */}
                 <div style={{
-                    display: 'flex', alignItems: 'center',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     height: '64px', padding: '0 20px',
                     borderBottom: '1px solid var(--border)',
                     flexShrink: 0,
@@ -143,6 +150,13 @@ export default function DashboardLayout({
                         </div>
                         <span style={{ fontWeight: 800, fontSize: '17px', color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>ATKIS</span>
                     </Link>
+                    <button 
+                        className="md:hidden p-1.5 rounded-lg text-gray-500 hover:bg-gray-100"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        style={{ color: 'var(--text-muted)' }}
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
                 </div>
 
                 {/* Nav */}
@@ -253,6 +267,7 @@ export default function DashboardLayout({
                             <Link
                                 key={renderItem.label}
                                 href={renderItem.href || '#'}
+                                onClick={() => setIsMobileMenuOpen(false)}
                                 style={{
                                     display: 'flex', alignItems: 'center', gap: '10px',
                                     padding: '9px 12px', borderRadius: '9px',
@@ -336,7 +351,7 @@ export default function DashboardLayout({
             </aside>
 
             {/* ─── Main Area ─── */}
-            <div style={{ marginLeft: '260px', flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+            <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out md:ml-[260px]">
 
                 {/* Header */}
                 <header style={{
@@ -348,13 +363,19 @@ export default function DashboardLayout({
                     flexShrink: 0,
                 }}>
                     <div style={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        width: '100%', padding: '0 20px',
-                    }}>
+                        display: 'flex', alignItems: 'center', justifyItems: 'space-between',
+                        width: '100%', padding: '0 16px',
+                    }} className="md:px-5 justify-between">
                         {/* Breadcrumb */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>ATKIS</span>
-                            <span style={{ color: 'var(--border-strong)' }}>›</span>
+                            <button 
+                                className="mr-2 p-1.5 rounded-lg md:hidden"
+                                style={{ color: 'var(--text-muted)' }}
+                                onClick={() => setIsMobileMenuOpen(true)}>
+                                <Menu className="w-5 h-5" />
+                            </button>
+                            <span className="hidden sm:inline" style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>ATKIS</span>
+                            <span className="hidden sm:inline" style={{ color: 'var(--border-strong)' }}>›</span>
                             <span style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: 600 }}>
                                 {currentLabel}
                             </span>
@@ -465,7 +486,7 @@ export default function DashboardLayout({
                 </header>
 
                 {/* Page Content */}
-                <main style={{ flex: 1, padding: '28px 28px' }}>
+                <main className="flex-1 p-4 md:p-6 lg:p-7 overflow-y-auto w-full max-w-full">
                     {children}
                 </main>
             </div>

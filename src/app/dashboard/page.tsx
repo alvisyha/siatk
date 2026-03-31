@@ -242,8 +242,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Content Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: user?.role === 'admin' ? '1fr 340px' : '1fr', gap: '20px', alignItems: 'start' }}
-                className={user?.role === 'admin' ? 'dashboard-grid' : ''}>
+            <div className={`grid gap-5 items-start ${user?.role === 'admin' ? 'grid-cols-1 lg:grid-cols-[1fr_340px]' : 'grid-cols-1'}`}>
 
                 {/* Activity Feed */}
                 <div style={{

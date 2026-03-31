@@ -194,7 +194,7 @@ export default function DataATKPage() {
                 </div>
 
                 <div className="overflow-x-auto min-h-[400px]">
-                    <table className="w-full text-left text-sm">
+                    <table className="w-full text-left text-sm min-w-[800px]">
                         <thead className="bg-gray-50 text-gray-600 font-medium border-b border-gray-200">
                             <tr>
                                 <th className="px-4 py-4 text-center w-16">No</th>

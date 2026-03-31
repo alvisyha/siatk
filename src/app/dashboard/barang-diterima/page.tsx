@@ -186,7 +186,7 @@ export default function BarangDiterimaPage() {
                 </div>
 
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
+                    <table className="w-full text-left text-sm min-w-[800px]">
                         <thead style={{background:'var(--bg)',borderBottom:'1px solid var(--border)'}}>
                             <tr>
                                 <th className="px-4 py-3 w-16" style={{fontSize:'12px',fontWeight:600,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.05em'}}>No</th>
