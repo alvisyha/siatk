@@ -77,6 +77,37 @@ export async function POST(request: Request) {
             );
         }
 
+        const parsedStok = parseInt(stok);
+        const parsedStokMin = parseInt(stok_minimum);
+
+        if (isNaN(parsedStok) || parsedStok <= 0) {
+            return NextResponse.json(
+                { error: 'Stok awal harus berupa angka dan lebih dari 0' },
+                { status: 400 }
+            );
+        }
+
+        if (isNaN(parsedStokMin) || parsedStokMin <= 0) {
+            return NextResponse.json(
+                { error: 'Stok minimal harus berupa angka dan lebih dari 0' },
+                { status: 400 }
+            );
+        }
+
+        // Check for duplicate name
+        const { data: existingName } = await sb
+            .from('barang')
+            .select('id')
+            .ilike('nama', nama.trim())
+            .single();
+
+        if (existingName) {
+            return NextResponse.json(
+                { error: 'Nama barang sudah terdaftar, gunakan nama lain' },
+                { status: 400 }
+            );
+        }
+
         const { data, error } = await sb
             .from('barang')
             .insert({
@@ -84,8 +115,8 @@ export async function POST(request: Request) {
                 kode,
                 deskripsi,
                 satuan_id: satuan_id || null,
-                stok_minimum: parseInt(stok_minimum) || 0,
-                stok: parseInt(stok) || 0,
+                stok_minimum: parsedStokMin,
+                stok: parsedStok,
                 status: true
             })
             .select()

@@ -72,8 +72,8 @@ export default function DataBarangPage() {
         kode: '',
         satuan_id: '',
         deskripsi: '',
-        stok_minimum: '0',
-        stok: '0'
+        stok_minimum: '',
+        stok: ''
     });
 
     useEffect(() => {
@@ -203,8 +203,8 @@ export default function DataBarangPage() {
                 kode: generateNewKode(),
                 satuan_id: '',
                 deskripsi: '',
-                stok_minimum: '0',
-                stok: '0'
+                stok_minimum: '',
+                stok: ''
             });
         }
         setIsModalOpen(true);
@@ -223,6 +223,31 @@ export default function DataBarangPage() {
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Check for duplicate name
+        const isDuplicate = barangList.some(
+            b => b.nama.toLowerCase().trim() === formData.nama.toLowerCase().trim() && b.id !== editingItem?.id
+        );
+
+        if (isDuplicate) {
+            alert('Nama barang sudah terdaftar! Gunakan nama lain.');
+            return;
+        }
+
+        const parsedStokMinimum = parseInt(formData.stok_minimum);
+        if (isNaN(parsedStokMinimum) || parsedStokMinimum <= 0) {
+            alert('Stok minimal harus berupa angka dan lebih dari 0');
+            return;
+        }
+
+        if (!editingItem) {
+            const parsedStok = parseInt(formData.stok);
+            if (isNaN(parsedStok) || parsedStok <= 0) {
+                alert('Stok awal harus berupa angka dan lebih dari 0');
+                return;
+            }
+        }
+
         setIsSaving(true);
         try {
             const url = editingItem ? `/api/barang/${editingItem.id}` : '/api/barang';
@@ -659,16 +684,16 @@ export default function DataBarangPage() {
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs font-semibold mb-1.5" style={{color:'var(--text-primary)'}}>Stok Awal</label>
+                                    <label className="block text-xs font-semibold mb-1.5" style={{color:'var(--text-primary)'}}>Stok Awal <span style={{color:'var(--danger)'}}>*</span></label>
                                     {editingItem ? (
                                         <input type="text" readOnly value={formData.stok} title="Ubah melalui transaksi" className="w-full px-3 py-2.5 text-sm rounded-lg" style={{border:'1.5px solid var(--border)',background:'var(--bg)',color:'var(--text-muted)',cursor:'not-allowed',outline:'none'}} />
                                     ) : (
-                                        <input type="number" min="0" value={formData.stok} onChange={e=>setFormData({...formData,stok:e.target.value})} className="w-full px-3 py-2.5 text-sm rounded-lg outline-none transition-all" style={{border:'1.5px solid var(--border)',background:'var(--bg)',color:'var(--text-primary)',fontFamily:'inherit'}} onFocus={e=>{e.currentTarget.style.borderColor='var(--primary)';e.currentTarget.style.boxShadow='0 0 0 3px rgba(99,102,241,0.1)';}} onBlur={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.boxShadow='none';}} />
+                                        <input type="number" min="1" required value={formData.stok} onChange={e=>setFormData({...formData,stok:e.target.value})} className="w-full px-3 py-2.5 text-sm rounded-lg outline-none transition-all" style={{border:'1.5px solid var(--border)',background:'var(--bg)',color:'var(--text-primary)',fontFamily:'inherit'}} onFocus={e=>{e.currentTarget.style.borderColor='var(--primary)';e.currentTarget.style.boxShadow='0 0 0 3px rgba(99,102,241,0.1)';}} onBlur={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.boxShadow='none';}} />
                                     )}
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-semibold mb-1.5" style={{color:'var(--text-primary)'}}>Stok Minimal</label>
-                                    <input type="number" min="0" value={formData.stok_minimum} onChange={e=>setFormData({...formData,stok_minimum:e.target.value})} className="w-full px-3 py-2.5 text-sm rounded-lg outline-none transition-all" style={{border:'1.5px solid var(--border)',background:'var(--bg)',color:'var(--text-primary)',fontFamily:'inherit'}} onFocus={e=>{e.currentTarget.style.borderColor='var(--primary)';e.currentTarget.style.boxShadow='0 0 0 3px rgba(99,102,241,0.1)';}} onBlur={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.boxShadow='none';}} />
+                                    <label className="block text-xs font-semibold mb-1.5" style={{color:'var(--text-primary)'}}>Stok Minimal <span style={{color:'var(--danger)'}}>*</span></label>
+                                    <input type="number" min="1" required value={formData.stok_minimum} onChange={e=>setFormData({...formData,stok_minimum:e.target.value})} className="w-full px-3 py-2.5 text-sm rounded-lg outline-none transition-all" style={{border:'1.5px solid var(--border)',background:'var(--bg)',color:'var(--text-primary)',fontFamily:'inherit'}} onFocus={e=>{e.currentTarget.style.borderColor='var(--primary)';e.currentTarget.style.boxShadow='0 0 0 3px rgba(99,102,241,0.1)';}} onBlur={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.boxShadow='none';}} />
                                 </div>
                             </div>
                             <div>

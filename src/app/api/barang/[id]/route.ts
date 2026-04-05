@@ -55,6 +55,33 @@ export async function PUT(request: Request, { params }: RouteParams) {
         const { id } = await params;
         const body = await request.json();
 
+        if (body.stok_minimum !== undefined) {
+            const parsedStokMin = parseInt(body.stok_minimum);
+            if (isNaN(parsedStokMin) || parsedStokMin <= 0) {
+                return NextResponse.json(
+                    { error: 'Stok minimal harus berupa angka dan lebih dari 0' },
+                    { status: 400 }
+                );
+            }
+            body.stok_minimum = parsedStokMin;
+        }
+
+        if (body.nama !== undefined) {
+            const { data: existingName } = await sb
+                .from('barang')
+                .select('id')
+                .ilike('nama', body.nama.trim())
+                .neq('id', id)
+                .single();
+
+            if (existingName) {
+                return NextResponse.json(
+                    { error: 'Nama barang sudah terdaftar, gunakan nama lain' },
+                    { status: 400 }
+                );
+            }
+        }
+
         const { data: bData, error: bError } = await sb
             .from('barang')
             // @ts-ignore
