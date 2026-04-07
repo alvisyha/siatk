@@ -12,6 +12,7 @@ export interface User {
     password: string
     name: string
     role: string
+    phone: string | null
     avatar: string | null
     sub_bagian_id: string | null
     sub_bagian?: { nama: string }
@@ -120,6 +121,7 @@ export type Database = {
                     password: string
                     name: string
                     role: string
+                    phone?: string | null
                     avatar?: string | null
                     sub_bagian_id?: string | null
                     created_at?: string
@@ -131,6 +133,7 @@ export type Database = {
                     password?: string
                     name?: string
                     role?: string
+                    phone?: string | null
                     avatar?: string | null
                     sub_bagian_id?: string | null
                     created_at?: string

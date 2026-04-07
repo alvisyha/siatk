@@ -20,6 +20,7 @@ interface User {
     name: string;
     role: string;
     avatar: string | null;
+    phone: string | null;
     sub_bagian_id: string | null;
     sub_bagian?: {
         id: string;
@@ -47,6 +48,7 @@ export default function UsersPage() {
         name: '',
         role: 'user',
         password: '',
+        phone: '',
         avatar: '',
         sub_bagian_id: ''
     });
@@ -92,6 +94,7 @@ export default function UsersPage() {
                 role: user.role,
                 password: '', // Don't show password
                 avatar: user.avatar || '',
+                phone: user.phone || '',
                 sub_bagian_id: user.sub_bagian_id || ''
             });
         } else {
@@ -102,6 +105,7 @@ export default function UsersPage() {
                 role: 'user',
                 password: '',
                 avatar: '',
+                phone: '',
                 sub_bagian_id: ''
             });
         }
@@ -225,6 +229,7 @@ export default function UsersPage() {
                             <tr>
                                 <th className="px-6 py-3">User</th>
                                 <th className="px-6 py-3">Role</th>
+                                <th className="px-6 py-3">Phone</th>
                                 <th className="px-6 py-3">Sub Bagian</th>
                                 <th className="px-6 py-3 text-right">Actions</th>
                             </tr>
@@ -270,6 +275,11 @@ export default function UsersPage() {
                                                     : 'bg-gray-50 text-gray-700 border-gray-200'}`}>
                                                 {user.role === 'admin' ? <Shield className="w-3 h-3" /> : <UserIcon className="w-3 h-3" />}
                                                 {user.role}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className="text-gray-600">
+                                                {user.phone || '-'}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4">
@@ -379,6 +389,16 @@ export default function UsersPage() {
                                     onChange={e => setFormData({ ...formData, avatar: e.target.value })}
                                     className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     placeholder="https://..."
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                                <input
+                                    type="text"
+                                    value={formData.phone}
+                                    onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                                    className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="08123456789"
                                 />
                             </div>
 

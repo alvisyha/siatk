@@ -37,43 +37,44 @@ export default function BarangDiterimaPage() {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            // 1. Fetch User Profile to know who we are
+            // 1. Fetch User Profile
             const userRes = await fetch('/api/auth/me');
             if (!userRes.ok) throw new Error('Unauthorized');
             const userData = await userRes.json();
             setUser(userData.user);
 
-            // 2. Fetch Permintaan Barang (GET API already filters based on user role/sub_bagian)
-            const res = await fetch('/api/permintaan-barang');
+            // 2. Fetch Pengajuan (new multi-item API)
+            const res = await fetch('/api/pengajuan');
             if (res.ok) {
                 const data = await res.json();
-                const requests = data.data || [];
+                const allPengajuan = data.data || [];
 
-                // 3. Aggregate "disetujui" requests
-                const approvedRequests = requests.filter((r: any) => r.status === 'disetujui');
-
+                // 3. Flatten all pengajuan_items where status = 'disetujui'
                 const aggregation: Record<string, ReceivedSummary> = {};
 
-                approvedRequests.forEach((r: any) => {
-                    const bId = r.barang_id;
-                    const sbId = r.sub_bagian_id || 'no-dept';
+                allPengajuan.forEach((pg: any) => {
                     const isAdmin = userData.user?.role === 'admin';
-                    
-                    // Key: if admin, group by barang + sub_bagian. if user, group by barang only
-                    const key = isAdmin ? `${bId}-${sbId}` : bId;
-                    
-                    if (!aggregation[key]) {
-                        aggregation[key] = {
-                            barang_id: bId,
-                            sub_bagian_id: r.sub_bagian_id,
-                            nama: r.barang?.nama || 'Unknown',
-                            kode: r.barang?.kode || '-',
-                            total: 0,
-                            satuan: r.barang?.satuan?.nama || '-',
-                            sub_bagian_nama: r.sub_bagian?.nama || (r.sub_bagian_id ? `Bagian ID: ${r.sub_bagian_id.substring(0,8)}` : 'Gudang/Umum')
-                        };
-                    }
-                    aggregation[key].total += (r.jumlah || 0);
+                    const sbId = pg.sub_bagian_id || 'no-dept';
+
+                    (pg.pengajuan_items || [])
+                        .filter((item: any) => item.status === 'disetujui')
+                        .forEach((item: any) => {
+                            const bId = item.barang_id;
+                            const key = isAdmin ? `${bId}-${sbId}` : bId;
+
+                            if (!aggregation[key]) {
+                                aggregation[key] = {
+                                    barang_id: bId,
+                                    sub_bagian_id: pg.sub_bagian_id,
+                                    nama: item.barang?.nama || 'Unknown',
+                                    kode: item.barang?.kode || '-',
+                                    total: 0,
+                                    satuan: item.satuan?.nama || '-',
+                                    sub_bagian_nama: pg.sub_bagian?.nama || (pg.sub_bagian_id ? `Bagian ID: ${pg.sub_bagian_id.substring(0, 8)}` : 'Gudang/Umum')
+                                };
+                            }
+                            aggregation[key].total += (item.jumlah || 0);
+                        });
                 });
 
                 setSummary(Object.values(aggregation));

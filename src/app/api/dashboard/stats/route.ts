@@ -134,71 +134,63 @@ export async function GET() {
                 activities: recentActivities
             });
         } else {
-            // For Regular Users: Show Permintaan stats
+            // For Regular Users: Show Pengajuan stats
             const sub_bagian_id = user.sub_bagian_id;
-            
-            // Initialize query for counts
-            let query = sb.from('permintaan_barang').select('*', { count: 'exact', head: true });
-            
-            // Filter by sub_bagian_id if exists, otherwise by user_id
-            if (sub_bagian_id) {
-                query = query.eq('sub_bagian_id', sub_bagian_id);
-            } else {
-                query = query.eq('user_id', user.id);
-            }
+            const filterField = sub_bagian_id ? 'sub_bagian_id' : 'user_id';
+            const filterValue = sub_bagian_id || user.id;
 
-            const [
-                { count: totalRequest },
-                { count: pendingCount },
-                { count: approvedCount },
-                { count: rejectedCount }
-            ] = await Promise.all([
-                query,
-                sb.from('permintaan_barang').select('*', { count: 'exact', head: true })
-                    .eq(sub_bagian_id ? 'sub_bagian_id' : 'user_id', sub_bagian_id || user.id)
-                    .eq('status', 'pending'),
-                sb.from('permintaan_barang').select('*', { count: 'exact', head: true })
-                    .eq(sub_bagian_id ? 'sub_bagian_id' : 'user_id', sub_bagian_id || user.id)
-                    .eq('status', 'disetujui'),
-                sb.from('permintaan_barang').select('*', { count: 'exact', head: true })
-                    .eq(sub_bagian_id ? 'sub_bagian_id' : 'user_id', sub_bagian_id || user.id)
-                    .eq('status', 'ditolak')
-            ]);
+            // Count pengajuan (header) per status via items
+            const { data: allItems } = await sb
+                .from('pengajuan_items')
+                .select('id, status, pengajuan:pengajuan_id(id, sub_bagian_id, user_id)')
+                .not('pengajuan', 'is', null);
 
-            // Recent Requests as activities
-            const { data: recentRequests } = await sb
-                .from('permintaan_barang')
-                .select('id, created_at, jumlah, barang_id, status')
-                .eq(sub_bagian_id ? 'sub_bagian_id' : 'user_id', sub_bagian_id || user.id)
+            // Filter items milik user/sub_bagian ini
+            const myItems = (allItems || []).filter((item: any) => {
+                const pg = item.pengajuan as any;
+                if (!pg) return false;
+                return filterField === 'sub_bagian_id'
+                    ? pg.sub_bagian_id === filterValue
+                    : pg.user_id === filterValue;
+            });
+
+            const totalRequest = myItems.length;
+            const pendingCount = myItems.filter((i: any) => i.status === 'pending').length;
+            const approvedCount = myItems.filter((i: any) => i.status === 'disetujui').length;
+            const rejectedCount = myItems.filter((i: any) => i.status === 'ditolak').length;
+
+            // Recent Pengajuan as activities
+            const { data: recentPengajuan } = await sb
+                .from('pengajuan')
+                .select('id, created_at, pemohon, pengajuan_items(id, jumlah, status, barang:barang_id(nama, satuan_id))')
+                .eq(filterField, filterValue)
                 .order('created_at', { ascending: false })
                 .limit(5);
 
-            const [barangL, satuanL] = await Promise.all([
-                sb.from('barang').select('id, nama, satuan_id'),
-                sb.from('satuan').select('id, nama')
-            ]);
+            const { data: satuanL } = await sb.from('satuan').select('id, nama');
 
-            const activities = (recentRequests || []).map((r: any) => {
-                const b = (barangL.data || []).find((x: any) => x.id === r.barang_id);
-                const s = b ? (satuanL.data || []).find((x: any) => x.id === b.satuan_id) : null;
-                return {
-                    id: r.id,
-                    created_at: r.created_at,
-                    jumlah: r.jumlah,
-                    barang: b ? { ...b, satuan: s } : null,
-                    activityType: 'permintaan',
-                    status: r.status
-                };
-            });
+            const activities = (recentPengajuan || []).flatMap((pg: any) =>
+                (pg.pengajuan_items || []).slice(0, 2).map((item: any) => {
+                    const s = (satuanL || []).find((x: any) => x.id === item.barang?.satuan_id);
+                    return {
+                        id: item.id,
+                        created_at: pg.created_at,
+                        jumlah: item.jumlah,
+                        barang: item.barang ? { ...item.barang, satuan: s } : null,
+                        activityType: 'permintaan',
+                        status: item.status
+                    };
+                })
+            ).slice(0, 5);
 
             return NextResponse.json({
                 stats: {
-                    totalRequest: totalRequest || 0,
-                    pendingCount: pendingCount || 0,
-                    approvedCount: approvedCount || 0,
-                    rejectedCount: rejectedCount || 0
+                    totalRequest,
+                    pendingCount,
+                    approvedCount,
+                    rejectedCount
                 },
-                lowStockItems: [], // No low stock items for regular users
+                lowStockItems: [],
                 activities
             });
         }

@@ -10,7 +10,8 @@ import {
     CheckCircle2,
     AlertCircle,
     Building2,
-    KeyRound
+    KeyRound,
+    Phone
 } from 'lucide-react';
 
 // Consistent input style helper
@@ -102,6 +103,7 @@ export default function SettingsPage() {
 
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
+    const [phone, setPhone] = useState('');
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -118,6 +120,7 @@ export default function SettingsPage() {
                 setUser(data.user);
                 setName(data.user.name || '');
                 setEmail(data.user.email || '');
+                setPhone(data.user.phone || '');
             }
         } catch (error) {
             console.error('Failed to fetch user:', error);
@@ -138,7 +141,7 @@ export default function SettingsPage() {
             const res = await fetch(`/api/users/${user.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email })
+                body: JSON.stringify({ name, email, phone })
             });
             if (res.ok) {
                 showMessage('success', 'Profil berhasil diperbarui!');
@@ -259,6 +262,15 @@ export default function SettingsPage() {
                                 value={email}
                                 onChange={(e: any) => setEmail(e.target.value)}
                                 placeholder="nama@email.com"
+                            />
+                        </FormField>
+                        <FormField label="Nomor WhatsApp (HP)">
+                            <InputWithIcon
+                                icon={Phone}
+                                type="text"
+                                value={phone}
+                                onChange={(e: any) => setPhone(e.target.value)}
+                                placeholder="Contoh: 08123456789"
                             />
                         </FormField>
                         <FormField label="Sub Bagian">

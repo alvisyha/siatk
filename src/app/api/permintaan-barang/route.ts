@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabase, sb } from '@/lib/supabase';
 import { getCurrentUser } from '@/lib/auth';
+import { sendWA } from '@/lib/whatsapp';
 
 export const dynamic = 'force-dynamic';
 
@@ -141,6 +142,32 @@ export async function POST(request: Request) {
             satuan: sInfo.data || null
         };
 
+        // --- WhatsApp Notification to Admins ---
+        try {
+            const { data: admins } = await sb
+                .from('users')
+                .select('phone, name')
+                .eq('role', 'admin')
+                .not('phone', 'is', null);
+
+            if (admins && admins.length > 0) {
+                const message = `🔔 *Permintaan Barang Baru!*\n\n` +
+                    `Dari: ${pemohon || user.name}\n` +
+                    `Barang: ${enrichedData.barang?.nama || 'Unknown'}\n` +
+                    `Jumlah: ${qty} ${enrichedData.satuan?.nama || ''}\n` +
+                    `Tanggal: ${new Date(data.tanggal).toLocaleDateString('id-ID')}\n` +
+                    `Keterangan: ${keterangan || '-'}\n\n` +
+                    `Silakan cek dashboard untuk memproses.`;
+
+                // Send to all admins in parallel
+                await Promise.all(admins.map((admin: any) => 
+                    admin.phone ? sendWA(admin.phone, message).catch(e => console.error(`Failed notify admin ${admin.name}:`, e)) : null
+                ));
+            }
+        } catch (waError) {
+            console.error('WhatsApp Notification Error (Admin):', waError);
+        }
+
         return NextResponse.json({ data: enrichedData, message: 'Permintaan berhasil diajukan dan stok telah dipesan' });
     } catch (error: any) {
         console.error('Error creating request:', error);
@@ -226,6 +253,33 @@ export async function PUT(request: Request) {
             .single();
 
         if (error) throw error;
+
+        // --- WhatsApp Notification to Requester ---
+        try {
+            const { data: requester } = await sb
+                .from('users')
+                .select('phone, name')
+                .eq('id', data.user_id)
+                .single();
+
+            if (requester && requester.phone) {
+                const { data: barang } = await sb.from('barang').select('nama').eq('id', data.barang_id).single();
+                const { data: satuan } = await sb.from('satuan').select('nama').eq('id', data.satuan_id).single();
+                
+                const statusEmoji = status === 'disetujui' ? '✅' : '❌';
+                const statusLabel = status.toUpperCase();
+
+                const message = `📢 *Update Permintaan Barang*\n\n` +
+                    `Permintaan Anda untuk:\n` +
+                    `*${barang?.nama || 'Barang'}* (${data.jumlah} ${satuan?.nama || ''})\n\n` +
+                    `Status: *${statusLabel}* ${statusEmoji}\n\n` +
+                    `Terima kasih.`;
+
+                await sendWA(requester.phone, message).catch(e => console.error(`Failed notify user ${requester.name}:`, e));
+            }
+        } catch (waError) {
+            console.error('WhatsApp Notification Error (User):', waError);
+        }
 
         return NextResponse.json({ data, message: `Status permintaan diperbarui menjadi ${status}` });
     } catch (error: any) {

@@ -195,16 +195,18 @@ export default function LaporanPage() {
                 });
             }
             else if (reportType === 'KELUAR') {
-                const [resKeluar, resPermintaan, resBarang, resSatuan, resSubBagian] = await Promise.all([
+                const [resKeluar, resPgItems, resBarang, resSatuan, resSubBagian] = await Promise.all([
                     sb.from('barang_keluar').select('id, tanggal, jumlah, penerima, barang_id').gte('tanggal', startDate).lte('tanggal', endDate).order('tanggal', { ascending: false }),
-                    sb.from('permintaan_barang').select('id, tanggal, jumlah, pemohon, barang_id, sub_bagian_id').eq('status', 'disetujui').gte('tanggal', startDate).lte('tanggal', endDate).order('tanggal', { ascending: false }),
+                    sb.from('pengajuan_items')
+                        .select('id, jumlah, barang_id, satuan_id, pengajuan:pengajuan_id(id, tanggal, pemohon, sub_bagian_id)')
+                        .eq('status', 'disetujui'),
                     sb.from('barang').select('id, nama, satuan_id'),
                     sb.from('satuan').select('id, nama'),
                     sb.from('sub_bagian').select('id, nama')
                 ]);
 
                 if (resKeluar.error) throw resKeluar.error;
-                if (resPermintaan.error) throw resPermintaan.error;
+                if (resPgItems.error) throw resPgItems.error;
 
                 const directKeluar = (resKeluar.data || []).map((item: any) => {
                     const b = (resBarang.data || []).find((x: any) => x.id === item.barang_id);
@@ -220,23 +222,30 @@ export default function LaporanPage() {
                     };
                 });
 
-                const requestKeluar = (resPermintaan.data || []).map((item: any) => {
-                    const b = (resBarang.data || []).find((x: any) => x.id === item.barang_id);
-                    const s = b ? (resSatuan.data || []).find((x: any) => x.id === b.satuan_id) : null;
-                    const sbeg = (resSubBagian.data || []).find((x: any) => x.id === item.sub_bagian_id);
-                    return {
-                        id: item.id,
-                        tanggal: new Date(item.tanggal).toLocaleDateString('id-ID'),
-                        barang_nama: b?.nama || '-',
-                        jumlah: item.jumlah,
-                        satuan: s?.nama || '-',
-                        penerima_pemasok: `${item.pemohon || '-'} (${sbeg?.nama || 'No Dept'})`,
-                        sumber: 'Permintaan'
-                    };
-                });
+                // Flatten pengajuan_items disetujui dalam rentang tanggal
+                const requestKeluar = (resPgItems.data || [])
+                    .filter((item: any) => {
+                        const pg = item.pengajuan as any;
+                        if (!pg?.tanggal) return false;
+                        return pg.tanggal >= startDate && pg.tanggal <= endDate;
+                    })
+                    .map((item: any) => {
+                        const pg = item.pengajuan as any;
+                        const b = (resBarang.data || []).find((x: any) => x.id === item.barang_id);
+                        const s = b ? (resSatuan.data || []).find((x: any) => x.id === b.satuan_id) : null;
+                        const sbeg = (resSubBagian.data || []).find((x: any) => x.id === pg?.sub_bagian_id);
+                        return {
+                            id: item.id,
+                            tanggal: pg?.tanggal ? new Date(pg.tanggal).toLocaleDateString('id-ID') : '-',
+                            barang_nama: b?.nama || '-',
+                            jumlah: item.jumlah,
+                            satuan: s?.nama || '-',
+                            penerima_pemasok: `${pg?.pemohon || '-'} (${sbeg?.nama || 'No Dept'})`,
+                            sumber: 'Permintaan'
+                        };
+                    });
 
                 formattedData = [...directKeluar, ...requestKeluar].sort((a, b) => {
-                    // Sort combined data by date (newest first)
                     const dateA = new Date(a.tanggal.split('/').reverse().join('-'));
                     const dateB = new Date(b.tanggal.split('/').reverse().join('-'));
                     return dateB.getTime() - dateA.getTime();
@@ -277,9 +286,10 @@ export default function LaporanPage() {
                 if (!subId) {
                     formattedData = [];
                 } else {
-                    const [resPermintaan, resBarang, resSatuan] = await Promise.all([
-                        sb.from('permintaan_barang')
-                            .select('barang_id, jumlah, status, tanggal')
+                    // Query pengajuan header + items untuk sub_bagian user
+                    const [resPengajuan, resBarang, resSatuan] = await Promise.all([
+                        sb.from('pengajuan')
+                            .select('id, tanggal, pengajuan_items(id, barang_id, jumlah, satuan_id, status)')
                             .eq('sub_bagian_id', subId)
                             .gte('tanggal', startDate)
                             .lte('tanggal', endDate),
@@ -287,12 +297,19 @@ export default function LaporanPage() {
                         sb.from('satuan').select('id, nama')
                     ]);
 
-                    if (resPermintaan.error) throw resPermintaan.error;
+                    if (resPengajuan.error) throw resPengajuan.error;
 
-                    formattedData = (resPermintaan.data || []).map((item: any) => {
+                    // Flatten semua items dari semua pengajuan
+                    const flatItems: any[] = [];
+                    (resPengajuan.data || []).forEach((pg: any) => {
+                        (pg.pengajuan_items || []).forEach((item: any) => {
+                            flatItems.push({ ...item, tanggal: pg.tanggal });
+                        });
+                    });
+
+                    formattedData = flatItems.map((item: any) => {
                         const b = (resBarang.data || []).find((x: any) => x.id === item.barang_id);
                         const s = b ? (resSatuan.data || []).find((x: any) => x.id === b.satuan_id) : null;
-                        
                         const qty = Number(item.jumlah) || 0;
                         return {
                             id: item.id,

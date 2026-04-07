@@ -56,7 +56,7 @@ export async function POST(request: Request) {
         }
 
         const body = await request.json();
-        const { email, password, name, role, avatar, sub_bagian_id } = body;
+        const { email, password, name, role, avatar, sub_bagian_id, phone } = body;
 
         if (!email || !password || !name || !role) {
             return NextResponse.json(
@@ -70,6 +70,7 @@ export async function POST(request: Request) {
             password,
             name,
             role,
+            phone: phone || null,
             avatar: avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`
         };
 

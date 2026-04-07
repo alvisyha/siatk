@@ -73,17 +73,17 @@ export async function DELETE(request: Request, { params }: RouteParams) {
             return NextResponse.json({ error: 'Tidak dapat menghapus akun sendiri' }, { status: 400 });
         }
 
-        // Clean up FK references before deleting user
-        const { error: permintaanError } = await supabase
-            .from('permintaan_barang')
+        // Clean up FK references: hapus pengajuan user (pengajuan_items ikut cascade)
+        const { error: pengajuanError } = await supabase
+            .from('pengajuan')
             .delete()
             .eq('user_id', id);
 
-        if (permintaanError) {
-            console.error('Error deleting related permintaan_barang:', permintaanError);
+        if (pengajuanError) {
+            console.error('Error deleting related pengajuan:', pengajuanError);
             return NextResponse.json({ 
-                error: 'Gagal menghapus data permintaan terkait', 
-                details: permintaanError.message 
+                error: 'Gagal menghapus data pengajuan terkait', 
+                details: pengajuanError.message 
             }, { status: 500 });
         }
 
