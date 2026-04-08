@@ -44,8 +44,8 @@ interface LowStockItem {
 
 interface DashboardStats {
     totalBarang: number;
-    totalMasukHariIni: number;
-    totalKeluarHariIni: number;
+    totalMasukBulanIni: number;
+    totalKeluarBulanIni: number;
     lowStockCount: number;
 }
 
@@ -177,7 +177,7 @@ export default function DashboardPage() {
                     </h1>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '13.5px', margin: 0 }}>
                         {user?.role === 'admin'
-                            ? 'Berikut adalah ringkasan inventaris ATK Anda hari ini.'
+                            ? 'Berikut adalah ringkasan inventaris ATK Anda bulan ini.'
                             : 'Pantau status pengajuan barang Anda di sini.'}
                     </p>
                     {user?.role === 'user' && (
@@ -227,8 +227,8 @@ export default function DashboardPage() {
                 {user?.role === 'admin' ? (
                     <>
                         <StatCard icon={Package} label="Total Jenis Barang" value={stats?.totalBarang || 0} accentColor="var(--primary)" bgColor="var(--primary-light)" />
-                        <StatCard icon={ArrowDownLeft} label="Transaksi Masuk" value={stats?.totalMasukHariIni || 0} accentColor="var(--teal)" bgColor="var(--teal-light)" />
-                        <StatCard icon={ArrowUpRight} label="Transaksi Keluar" value={stats?.totalKeluarHariIni || 0} accentColor="var(--amber)" bgColor="var(--amber-light)" />
+                        <StatCard icon={ArrowDownLeft} label="Transaksi Masuk" value={stats?.totalMasukBulanIni || 0} accentColor="var(--teal)" bgColor="var(--teal-light)" />
+                        <StatCard icon={ArrowUpRight} label="Transaksi Keluar" value={stats?.totalKeluarBulanIni || 0} accentColor="var(--amber)" bgColor="var(--amber-light)" />
                         <StatCard icon={AlertTriangle} label="Stok Menipis" value={stats?.lowStockCount || 0} accentColor="var(--danger)" bgColor="var(--danger-light)" />
                     </>
                 ) : (
