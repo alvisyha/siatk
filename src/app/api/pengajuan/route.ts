@@ -18,7 +18,7 @@ export async function GET() {
             .select(`
                 id, user_id, sub_bagian_id, tanggal, pemohon, keterangan, created_at,
                 pengajuan_items (
-                    id, jumlah, status, alasan_penolakan,
+                    id, barang_id, jumlah, status, alasan_penolakan,
                     barang:barang_id ( id, nama, kode, stok, satuan_id ),
                     satuan:satuan_id ( id, nama )
                 ),

@@ -35,8 +35,8 @@ export async function GET() {
                 jumlah: Number(item.jumlah) || 0,
                 harga: Number(item.harga) || 0,
                 stok: Number(item.stok) || 0,
-                barang: b ? { 
-                    ...b, 
+                barang: b ? {
+                    ...b,
                     satuan: (satuanList.data || []).find((x: any) => x.id === b.satuan_id) || null
                 } : null,
                 satuan: s || null

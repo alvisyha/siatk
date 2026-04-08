@@ -97,13 +97,16 @@ export default function LoginPage() {
                             <span style={{ fontSize: '24px', fontWeight: 900, color: '#fff', fontStyle: 'italic' }}>A</span>
                         </div>
                         <h1 style={{
-                            fontSize: '26px', fontWeight: 800, margin: '0 0 6px',
+                            fontSize: '26px', fontWeight: 800, margin: '0 0 0px',
                             background: 'linear-gradient(135deg, #4f46e5, #6366f1)',
                             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
                             backgroundClip: 'text', letterSpacing: '-0.5px'
                         }}>
                             ATKIS
                         </h1>
+                        <h2 style={{ fontSize: '16px', margin: '0 0 0px', fontWeight: 800 }}>
+                            ATK Information System
+                        </h2>
                         <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', margin: 0, fontWeight: 400 }}>
                             Silakan masuk ke akun Anda
                         </p>
@@ -209,7 +212,7 @@ export default function LoginPage() {
                         </div>
 
                         {/* Remember & Forgot */}
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        {/* <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                                 <input
                                     type="checkbox"
@@ -226,7 +229,7 @@ export default function LoginPage() {
                             >
                                 Lupa password?
                             </a>
-                        </div>
+                        </div> */}
 
                         {/* Submit */}
                         <button
@@ -240,7 +243,8 @@ export default function LoginPage() {
                                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                                 boxShadow: isLoading ? 'none' : '0 4px 14px rgba(99,102,241,0.3)',
                                 transition: 'all 0.2s ease',
-                                marginTop: '4px'
+                                marginTop: '12px',
+                                marginBottom: '12px'
                             }}
                             onMouseEnter={e => {
                                 if (!isLoading) {
@@ -259,13 +263,13 @@ export default function LoginPage() {
                                     Memproses...
                                 </>
                             ) : (
-                                'Masuk ke Dashboard'
+                                'Login'
                             )}
                         </button>
                     </form>
 
                     {/* Demo Credentials */}
-                    <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid var(--border)' }}>
+                    {/* <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid var(--border)' }}>
                         <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textAlign: 'center', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
                             Demo Credentials
                         </p>
@@ -278,7 +282,7 @@ export default function LoginPage() {
                             <p style={{ margin: 0 }}>Email: <span style={{ color: 'var(--primary)', fontWeight: 600 }}>admin@example.com</span></p>
                             <p style={{ margin: 0 }}>Password: <span style={{ color: 'var(--primary)', fontWeight: 600 }}>password123</span></p>
                         </div>
-                    </div>
+                    </div> */}
                 </div>
 
                 {/* Footer note */}

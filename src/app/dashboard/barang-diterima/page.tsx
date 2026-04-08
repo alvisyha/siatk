@@ -59,7 +59,7 @@ export default function BarangDiterimaPage() {
                     (pg.pengajuan_items || [])
                         .filter((item: any) => item.status === 'disetujui')
                         .forEach((item: any) => {
-                            const bId = item.barang_id;
+                            const bId = item.barang_id || item.barang?.id;
                             const key = isAdmin ? `${bId}-${sbId}` : bId;
 
                             if (!aggregation[key]) {

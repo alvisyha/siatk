@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-    FileText, 
-    Download, 
-    Filter, 
-    Calendar, 
+import {
+    FileText,
+    Download,
+    Filter,
+    Calendar,
     Building2,
     Loader2,
     Search,
@@ -108,7 +108,7 @@ export default function LaporanPage() {
             if (!res.ok) throw new Error('Failed to fetch user');
             const data = await res.json();
             const user = data.user;
-            
+
             if (user) {
                 setRole(user.role);
                 setUserSubBagianId(user.sub_bagian_id);
@@ -157,7 +157,7 @@ export default function LaporanPage() {
                     sb.from('barang').select('id, nama, satuan_id, stok').order('nama'),
                     sb.from('satuan').select('id, nama')
                 ]);
-                
+
                 if (resBarang.error) throw resBarang.error;
 
                 formattedData = (resBarang.data || []).map((item: any) => {
@@ -169,7 +169,7 @@ export default function LaporanPage() {
                         satuan: s?.nama || '-'
                     };
                 });
-            } 
+            }
             else if (reportType === 'MASUK') {
                 const [resMasuk, resBarang, resSatuan] = await Promise.all([
                     sb.from('barang_masuk').select('id, tanggal, jumlah, harga, pemasok, barang_id').gte('tanggal', startDate).lte('tanggal', endDate).order('tanggal', { ascending: false }),
@@ -341,7 +341,7 @@ export default function LaporanPage() {
             const doc = new jsPDF();
             const currentLabel = reportTypes.find(t => t.id === reportType)?.label || 'Laporan';
             const monthLabel = months[parseInt(selectedMonth)];
-            const periodLabel = filterMode === 'month' 
+            const periodLabel = filterMode === 'month'
                 ? `${monthLabel} ${selectedYear}`
                 : `${new Date(customStartDate).toLocaleDateString('id-ID')} - ${new Date(customEndDate).toLocaleDateString('id-ID')}`;
 
@@ -358,7 +358,7 @@ export default function LaporanPage() {
             doc.setFontSize(16);
             doc.setTextColor(31, 41, 55);
             doc.text(`LAPORAN ${currentLabel.toUpperCase()}`, 14, 45);
-            
+
             if (reportType !== 'STOK') {
                 doc.setFontSize(10);
                 doc.text(`Periode: ${periodLabel}`, 14, 52);
@@ -381,10 +381,10 @@ export default function LaporanPage() {
                 ]);
             } else if (reportType === 'MASUK') {
                 const grandTotal = filteredData.reduce((sum, item) => sum + (item.total_harga || 0), 0);
-                
+
                 head = [['No', 'Tanggal', 'Nama Barang', 'Jumlah', 'Satuan', 'Harga', 'Total Harga', 'Pemasok']];
                 body = filteredData.map((item, i) => [
-                    i + 1, item.tanggal || '-', item.barang_nama, item.jumlah, item.satuan, 
+                    i + 1, item.tanggal || '-', item.barang_nama, item.jumlah, item.satuan,
                     new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(item.harga || 0),
                     new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(item.total_harga || 0),
                     item.penerima_pemasok || '-'
@@ -398,7 +398,7 @@ export default function LaporanPage() {
                 ]);
             } else if (reportType === 'NILAI_PERSEDIAAN') {
                 const grandTotal = filteredData.reduce((sum, item) => sum + (item.total_harga || 0), 0);
-                
+
                 head = [['No', 'Nama Barang', 'Satuan', 'Stok', 'Harga Satuan', 'Total Nilai']];
                 body = filteredData.map((item, i) => [
                     i + 1, item.barang_nama, item.satuan, item.jumlah,
@@ -428,7 +428,7 @@ export default function LaporanPage() {
         }
     };
 
-    const filteredData = data.filter(item => 
+    const filteredData = data.filter(item =>
         item.barang_nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (item.sub_bagian_nama?.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (item.penerima_pemasok?.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -448,7 +448,7 @@ export default function LaporanPage() {
                         </div>
                     </h1>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                     <button
                         onClick={fetchData}
@@ -463,7 +463,7 @@ export default function LaporanPage() {
                         className="flex items-center justify-center gap-2 px-5 py-2.5 bg-red-600 text-white rounded-xl font-bold text-sm shadow-md hover:bg-red-700 disabled:opacity-50 transition-all active:scale-95 shadow-red-200"
                     >
                         {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                        Export PDF
+                        Download
                     </button>
                 </div>
             </div>
@@ -474,11 +474,10 @@ export default function LaporanPage() {
                     <button
                         key={type.id}
                         onClick={() => setReportType(type.id as ReportType)}
-                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all border-2 ${
-                            reportType === type.id 
-                            ? `border-blue-600 bg-blue-50 text-blue-600 shadow-sm` 
-                            : 'border-transparent bg-white text-gray-500 hover:bg-gray-50'
-                        }`}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all border-2 ${reportType === type.id
+                                ? `border-blue-600 bg-blue-50 text-blue-600 shadow-sm`
+                                : 'border-transparent bg-white text-gray-500 hover:bg-gray-50'
+                            }`}
                     >
                         <type.icon className={`w-4 h-4 ${reportType === type.id ? 'text-blue-600' : 'text-gray-400'}`} />
                         {type.label}
@@ -493,21 +492,19 @@ export default function LaporanPage() {
                         <div className="flex p-1 bg-gray-100 rounded-xl w-fit">
                             <button
                                 onClick={() => setFilterMode('month')}
-                                className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${
-                                    filterMode === 'month' 
-                                    ? 'bg-white text-blue-600 shadow-sm' 
-                                    : 'text-gray-500 hover:text-gray-700'
-                                }`}
+                                className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${filterMode === 'month'
+                                        ? 'bg-white text-blue-600 shadow-sm'
+                                        : 'text-gray-500 hover:text-gray-700'
+                                    }`}
                             >
                                 Per Bulan
                             </button>
                             <button
                                 onClick={() => setFilterMode('range')}
-                                className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${
-                                    filterMode === 'range' 
-                                    ? 'bg-white text-blue-600 shadow-sm' 
-                                    : 'text-gray-500 hover:text-gray-700'
-                                }`}
+                                className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${filterMode === 'range'
+                                        ? 'bg-white text-blue-600 shadow-sm'
+                                        : 'text-gray-500 hover:text-gray-700'
+                                    }`}
                             >
                                 Rentang Tanggal
                             </button>
@@ -580,17 +577,17 @@ export default function LaporanPage() {
 
 
                     <div className={`space-y-2 ${(reportType === 'STOK' || reportType === 'NILAI_PERSEDIAAN') ? 'md:col-span-3' : 'md:col-span-1'}`}>
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                        <Search className="w-3.5 h-3.5" /> Cari Data
-                    </label>
-                    <input
-                        type="text"
-                        placeholder="Nama barang / kata kunci lainnya..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-medium"
-                    />
-                </div>
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                            <Search className="w-3.5 h-3.5" /> Cari Data
+                        </label>
+                        <input
+                            type="text"
+                            placeholder="Nama barang / kata kunci lainnya..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-medium"
+                        />
+                    </div>
                 </div>
 
                 {reportType === 'REKAP_USER' && (
@@ -684,19 +681,17 @@ export default function LaporanPage() {
                                         )}
                                         {reportType === 'KELUAR' && (
                                             <td className="px-6 py-4 text-sm">
-                                                <span className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${
-                                                    item.sumber === 'Langsung' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
-                                                }`}>
+                                                <span className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${item.sumber === 'Langsung' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+                                                    }`}>
                                                     {item.sumber}
                                                 </span>
                                             </td>
                                         )}
                                         {reportType === 'REKAP_USER' && (
                                             <td className="px-6 py-4 text-sm text-center" colSpan={3}>
-                                                <span className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${
-                                                    item.status === 'disetujui' ? 'bg-emerald-100 text-emerald-700' : 
-                                                    item.status === 'ditolak' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
-                                                }`}>
+                                                <span className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${item.status === 'disetujui' ? 'bg-emerald-100 text-emerald-700' :
+                                                        item.status === 'ditolak' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
+                                                    }`}>
                                                     {item.status}
                                                 </span>
                                             </td>
