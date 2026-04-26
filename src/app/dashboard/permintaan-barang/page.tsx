@@ -296,6 +296,49 @@ export default function PermintaanBarangPage() {
         }
     };
 
+    const handleCancelItem = async (itemId: string) => {
+        if (!confirm('Apakah Anda yakin ingin membatalkan dan menghapus permintaan barang ini?')) return;
+        setIsSaving(true);
+        try {
+            const res = await fetch(`/api/pengajuan/${itemId}`, {
+                method: 'DELETE'
+            });
+
+            if (res.ok) {
+                await fetchAll();
+            } else {
+                const err = await res.json();
+                alert(`Gagal: ${err.error}`);
+            }
+        } catch (e) {
+            console.error('handleCancelItem error:', e);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleCancelPengajuan = async (pengajuanId: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!confirm('Apakah Anda yakin ingin membatalkan dan menghapus seluruh pengajuan ini?')) return;
+        setIsSaving(true);
+        try {
+            const res = await fetch(`/api/pengajuan/batal-semua/${pengajuanId}`, {
+                method: 'DELETE'
+            });
+
+            if (res.ok) {
+                await fetchAll();
+            } else {
+                const err = await res.json();
+                alert(`Gagal: ${err.error}`);
+            }
+        } catch (e) {
+            console.error('handleCancelPengajuan error:', e);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     // ── Filter & Search ────────────────────────────────────────────────────
 
     const filteredList = list.filter(pg => {
@@ -492,12 +535,27 @@ export default function PermintaanBarangPage() {
                                                     <StatusBadge status={overall} />
                                                 </td>
                                                 <td className="px-4 py-3.5">
-                                                    <button className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5"
-                                                        style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text-secondary)', cursor: 'pointer' }}
-                                                        onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
-                                                        onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}>
-                                                        Detail <ChevronRight className="w-3.5 h-3.5" />
-                                                    </button>
+                                                    <div className="flex items-center gap-2">
+                                                        {userRole === 'user' && overall === 'pending' && (
+                                                            <button
+                                                                title="Batalkan Pengajuan"
+                                                                disabled={isSaving}
+                                                                onClick={(e) => handleCancelPengajuan(pg.id, e)}
+                                                                className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5"
+                                                                style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)', cursor: 'pointer' }}
+                                                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'}
+                                                                onMouseLeave={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
+                                                            >
+                                                                <Trash2 className="w-3.5 h-3.5" /> Batal
+                                                            </button>
+                                                        )}
+                                                        <button className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5"
+                                                            style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text-secondary)', cursor: 'pointer' }}
+                                                            onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+                                                            onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}>
+                                                            Detail <ChevronRight className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         </React.Fragment>
@@ -883,6 +941,22 @@ export default function PermintaanBarangPage() {
                                                                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(16, 185, 129, 0.1)'}
                                                             >
                                                                 <CheckCircle2 className="w-4 h-4" /> Setujui
+                                                            </button>
+                                                        </div>
+                                                    )}
+
+                                                    {/* User Actions */}
+                                                    {userRole === 'user' && item.status === 'pending' && (
+                                                        <div className="flex gap-2 w-full sm:w-auto shrink-0 mt-3 sm:mt-0">
+                                                            <button
+                                                                disabled={isSaving}
+                                                                onClick={e => { e.stopPropagation(); handleCancelItem(item.id); }}
+                                                                className="flex-1 sm:flex-none px-4 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-colors"
+                                                                style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)', cursor: 'pointer' }}
+                                                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'}
+                                                                onMouseLeave={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
+                                                            >
+                                                                <Trash2 className="w-4 h-4" /> Batal
                                                             </button>
                                                         </div>
                                                     )}

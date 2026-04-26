@@ -180,3 +180,49 @@ export async function PATCH(
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
+
+// DELETE /api/pengajuan/[itemId]
+// Hapus item pengajuan (hanya jika masih pending, oleh user yang bersangkutan atau admin)
+export async function DELETE(
+    request: Request,
+    { params }: { params: Promise<{ itemId: string }> }
+) {
+    try {
+        const user = await getCurrentUser();
+        if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+        const { itemId } = await params;
+
+        // Ambil data item dan pastikan status masih pending
+        const { data: item, error: itemErr } = await sb
+            .from('pengajuan_items')
+            .select('id, status, pengajuan_id, pengajuan!inner(user_id)')
+            .eq('id', itemId)
+            .single();
+
+        if (itemErr || !item) {
+            return NextResponse.json({ error: 'Item tidak ditemukan' }, { status: 404 });
+        }
+
+        // Cek permission: admin, atau user pembuat
+        if (user.role !== 'admin' && item.pengajuan?.user_id !== user.id) {
+             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+        }
+
+        if (item.status !== 'pending') {
+            return NextResponse.json({ error: 'Hanya item pending yang dapat dibatalkan' }, { status: 400 });
+        }
+
+        const { error: delErr } = await sb
+            .from('pengajuan_items')
+            .delete()
+            .eq('id', itemId);
+
+        if (delErr) throw delErr;
+
+        return NextResponse.json({ message: 'Permintaan berhasil dibatalkan dan dihapus' });
+    } catch (error: any) {
+        console.error('DELETE /api/pengajuan/[itemId] error:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}

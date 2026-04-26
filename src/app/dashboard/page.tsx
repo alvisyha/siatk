@@ -242,13 +242,14 @@ export default function DashboardPage() {
             </div>
 
             {/* Content Grid */}
-            <div className={`grid gap-5 items-start ${user?.role === 'admin' ? 'grid-cols-1 lg:grid-cols-[1fr_340px]' : 'grid-cols-1'}`}>
+            <div className={`grid gap-5 items-stretch ${user?.role === 'admin' ? 'grid-cols-1 lg:grid-cols-[1fr_340px]' : 'grid-cols-1'}`}>
 
                 {/* Activity Feed */}
                 <div style={{
                     background: 'var(--surface)', borderRadius: '14px',
                     border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)',
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    display: 'flex', flexDirection: 'column', height: '420px'
                 }}>
                     {/* Card Header */}
                     <div style={{
@@ -261,7 +262,7 @@ export default function DashboardPage() {
                         </h2>
                     </div>
 
-                    <div style={{ padding: '12px', maxHeight: '360px', overflowY: 'auto' }}>
+                    <div style={{ padding: '12px', flex: 1, overflowY: 'auto', minHeight: 0 }}>
                         {activities.length === 0 ? (
                             <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13.5px' }}>
                                 Belum ada aktivitas terbaru hari ini.
@@ -323,7 +324,8 @@ export default function DashboardPage() {
                     <div style={{
                         background: 'var(--surface)', borderRadius: '14px',
                         border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)',
-                        overflow: 'hidden'
+                        overflow: 'hidden',
+                        display: 'flex', flexDirection: 'column', height: '420px'
                     }}>
                         <div style={{
                             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -346,53 +348,63 @@ export default function DashboardPage() {
                             )}
                         </div>
 
-                        <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {/* Scroll body — grows to fill card height below header */}
+                        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', paddingTop: '12px', paddingBottom: '12px', paddingLeft: '12px', paddingRight: '6px' }}>
                             {lowStockItems.length === 0 ? (
                                 <div style={{ padding: '28px 16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
                                     Semua stok dalam kondisi aman. ✓
                                 </div>
                             ) : (
-                                lowStockItems.slice(0, 3).map((item) => {
-                                    const pct = Math.min((item.jumlah / Math.max(item.stok_minimum, 1)) * 100, 100);
-                                    return (
-                                        <div key={item.id} style={{
-                                            padding: '12px 14px', borderRadius: '10px',
-                                            background: 'var(--danger-light)',
-                                            border: '1px solid var(--danger-border)'
-                                        }}>
-                                            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                                <div>
-                                                    <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{item.nama}</p>
-                                                    <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{item.kode || '—'}</p>
+                                <>
+                                    {/* Dedicated scroll container — grows to fill, scrolls when needed */}
+                                    <div style={{
+                                        flex: 1,
+                                        minHeight: 0,
+                                        overflowY: 'auto',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '8px',
+                                        paddingRight: '6px',
+                                    }}>
+                                        {lowStockItems.map((item) => {
+                                            const pct = Math.min((item.jumlah / Math.max(item.stok_minimum, 1)) * 100, 100);
+                                            return (
+                                                <div key={item.id} style={{
+                                                    padding: '12px 14px', borderRadius: '10px',
+                                                    background: 'var(--danger-light)',
+                                                    border: '1px solid var(--danger-border)',
+                                                    flexShrink: 0,
+                                                }}>
+                                                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                                        <div>
+                                                            <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{item.nama}</p>
+                                                            <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{item.kode || '—'}</p>
+                                                        </div>
+                                                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                                            <p style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: 'var(--danger)', lineHeight: 1.1 }}>{item.jumlah}</p>
+                                                            <p style={{ margin: 0, fontSize: '10px', color: 'var(--danger)', fontWeight: 500 }}>{item.satuan || 'Unit'}</p>
+                                                        </div>
+                                                    </div>
+                                                    {/* Progress bar */}
+                                                    <div style={{ height: '4px', background: 'rgba(220,38,38,0.15)', borderRadius: '99px', overflow: 'hidden' }}>
+                                                        <div style={{ height: '100%', width: `${pct}%`, background: 'var(--danger)', borderRadius: '99px', transition: 'width 0.5s ease' }} />
+                                                    </div>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px' }}>
+                                                        <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Min: {item.stok_minimum}</span>
+                                                        <span style={{ fontSize: '10px', color: 'var(--danger)', fontWeight: 600 }}>{pct.toFixed(0)}%</span>
+                                                    </div>
                                                 </div>
-                                                <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                                                    <p style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: 'var(--danger)', lineHeight: 1.1 }}>{item.jumlah}</p>
-                                                    <p style={{ margin: 0, fontSize: '10px', color: 'var(--danger)', fontWeight: 500 }}>{item.satuan || 'Unit'}</p>
-                                                </div>
-                                            </div>
-                                            {/* Progress */}
-                                            <div style={{ height: '4px', background: 'rgba(220,38,38,0.15)', borderRadius: '99px', overflow: 'hidden' }}>
-                                                <div style={{ height: '100%', width: `${pct}%`, background: 'var(--danger)', borderRadius: '99px', transition: 'width 0.5s ease' }} />
-                                            </div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px' }}>
-                                                <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Min: {item.stok_minimum}</span>
-                                                <span style={{ fontSize: '10px', color: 'var(--danger)', fontWeight: 600 }}>{pct.toFixed(0)}%</span>
-                                            </div>
-                                        </div>
-                                    );
-                                })
-                            )}
+                                            );
+                                        })}
+                                        {/* Bottom spacer inside scroll area so last item isn't flush against the edge */}
+                                        <div style={{ minHeight: '12px', flexShrink: 0 }} />
+                                    </div>
 
-                            {(stats?.lowStockCount || 0) > 3 && (
-                                <p style={{ textAlign: 'center', fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0', fontStyle: 'italic' }}>
-                                    + {(stats?.lowStockCount || 0) - 3} barang lainnya
-                                </p>
-                            )}
-
-                            {lowStockItems.length > 0 && (
-                                <p style={{ textAlign: 'center', fontSize: '11.5px', color: 'var(--text-muted)', margin: '6px 0 0', fontStyle: 'italic' }}>
-                                    Segera lakukan transaksi barang masuk.
-                                </p>
+                                    {/* Footer — always visible, outside scroll container */}
+                                    <p style={{ textAlign: 'center', fontSize: '11.5px', color: 'var(--text-muted)', margin: '8px 0 0', fontStyle: 'italic' }}>
+                                        Segera lakukan transaksi barang masuk.
+                                    </p>
+                                </>
                             )}
                         </div>
                     </div>
