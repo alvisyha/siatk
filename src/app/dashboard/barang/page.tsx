@@ -672,14 +672,10 @@ export default function DataBarangPage() {
                                 </div>
                                 <div>
                                     <label className="block text-xs font-semibold mb-1.5" style={{color:'var(--text-primary)'}}>Satuan</label>
-                                    {editingItem ? (
-                                        <input type="text" readOnly value={editingItem.satuan?.nama||'-'} className="w-full px-3 py-2.5 text-sm rounded-lg" style={{border:'1.5px solid var(--border)',background:'var(--bg)',color:'var(--text-muted)',cursor:'not-allowed',outline:'none'}} />
-                                    ) : (
-                                        <select value={formData.satuan_id} onChange={e=>setFormData({...formData,satuan_id:e.target.value})} className="w-full px-3 py-2.5 text-sm rounded-lg outline-none transition-all" style={{border:'1.5px solid var(--border)',background:'var(--bg)',color:'var(--text-primary)',fontFamily:'inherit'}} onFocus={e=>{e.currentTarget.style.borderColor='var(--primary)';}} onBlur={e=>{e.currentTarget.style.borderColor='var(--border)';}}>
-                                            <option value="">-- Pilih Satuan --</option>
-                                            {satuanList.map(s=>(<option key={s.id} value={s.id}>{s.nama}</option>))}
-                                        </select>
-                                    )}
+                                    <select value={formData.satuan_id} onChange={e=>setFormData({...formData,satuan_id:e.target.value})} className="w-full px-3 py-2.5 text-sm rounded-lg outline-none transition-all" style={{border:'1.5px solid var(--border)',background:'var(--bg)',color:'var(--text-primary)',fontFamily:'inherit'}} onFocus={e=>{e.currentTarget.style.borderColor='var(--primary)';}} onBlur={e=>{e.currentTarget.style.borderColor='var(--border)';}}>
+                                        <option value="">-- Pilih Satuan --</option>
+                                        {satuanList.map(s=>(<option key={s.id} value={s.id}>{s.nama}</option>))}
+                                    </select>
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-3">
