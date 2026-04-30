@@ -87,6 +87,20 @@ export async function DELETE(request: Request, { params }: RouteParams) {
             }, { status: 500 });
         }
 
+        // Clean up FK references: hapus permintaan_barang user
+        const { error: permintaanError } = await supabase
+            .from('permintaan_barang')
+            .delete()
+            .eq('user_id', id);
+
+        if (permintaanError) {
+            console.error('Error deleting related permintaan_barang:', permintaanError);
+            return NextResponse.json({ 
+                error: 'Gagal menghapus data permintaan_barang terkait', 
+                details: permintaanError.message 
+            }, { status: 500 });
+        }
+
         const { error } = await supabase
             .from('users')
             .delete()
