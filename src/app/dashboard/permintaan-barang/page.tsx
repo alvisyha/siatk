@@ -8,6 +8,7 @@ import {
     CheckCircle2, XCircle, Clock, Filter, Calendar, ChevronDown,
     ChevronRight, Trash2, PackagePlus
 } from 'lucide-react';
+import SearchableSelect from '@/components/SearchableSelect';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -687,15 +688,20 @@ export default function PermintaanBarangPage() {
                                                 <div className="grid grid-cols-3 gap-2">
                                                     {/* Pilih Barang */}
                                                     <div className="col-span-2">
-                                                        <select required className={inputCls}
-                                                            style={inputStyle()} onFocus={onFocus} onBlur={onBlur}
+                                                        <SearchableSelect
+                                                            required
+                                                            className={inputCls}
+                                                            style={inputStyle()}
+                                                            onFocusCb={onFocus}
+                                                            onBlurCb={onBlur}
                                                             value={item.barang_id}
-                                                            onChange={e => updateItem(index, 'barang_id', e.target.value)}>
-                                                            <option value="">-- Pilih Barang --</option>
-                                                            {barangList.filter(b => b.status !== false).map(b => (
-                                                                <option key={b.id} value={b.id}>{b.nama}</option>
-                                                            ))}
-                                                        </select>
+                                                            onChange={(val) => updateItem(index, 'barang_id', val)}
+                                                            placeholder="Cari & pilih barang..."
+                                                            options={barangList.filter(b => b.status !== false).map(b => ({
+                                                                value: b.id,
+                                                                label: b.nama
+                                                            }))}
+                                                        />
                                                     </div>
 
                                                     {/* Jumlah */}

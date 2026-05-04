@@ -83,7 +83,13 @@ export async function GET() {
                 stok_minimum: b.stok_minimum || 0
             })).sort((a: any, b: any) => a.jumlah - b.jumlah).slice(0, 10) || [];
 
-            // 5. Recent Activities
+            // 5. Total Pending Items (across all users)
+            const { count: totalPendingItems } = await sb
+                .from('pengajuan_items')
+                .select('id', { count: 'exact', head: true })
+                .eq('status', 'pending');
+
+            // 6. Recent Activities
             const [recentMasuk, recentKeluar] = await Promise.all([
                 sb.from('barang_masuk')
                     .select('id, created_at, jumlah, barang_id, type:kode_transaksi')
@@ -125,7 +131,8 @@ export async function GET() {
                     totalBarang,
                     totalMasukBulanIni,
                     totalKeluarBulanIni,
-                    lowStockCount: lowStockCount || 0
+                    lowStockCount: lowStockCount || 0,
+                    totalPendingItems: totalPendingItems || 0
                 },
                 lowStockItems: lowStockItems || [],
                 activities: recentActivities

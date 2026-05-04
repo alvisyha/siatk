@@ -12,7 +12,8 @@ import {
     AlertTriangle,
     History,
     PlusCircle,
-    TrendingUp
+    TrendingUp,
+    ClipboardList
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -47,6 +48,7 @@ interface DashboardStats {
     totalMasukBulanIni: number;
     totalKeluarBulanIni: number;
     lowStockCount: number;
+    totalPendingItems: number;
 }
 
 // Reusable stat card component inline
@@ -230,6 +232,9 @@ export default function DashboardPage() {
                         <StatCard icon={ArrowDownLeft} label="Transaksi Masuk" value={stats?.totalMasukBulanIni || 0} accentColor="var(--teal)" bgColor="var(--teal-light)" />
                         <StatCard icon={ArrowUpRight} label="Transaksi Keluar" value={stats?.totalKeluarBulanIni || 0} accentColor="var(--amber)" bgColor="var(--amber-light)" />
                         <StatCard icon={AlertTriangle} label="Stok Menipis" value={stats?.lowStockCount || 0} accentColor="var(--danger)" bgColor="var(--danger-light)" />
+                        <Link href="/dashboard/permintaan-barang" style={{ textDecoration: 'none' }}>
+                            <StatCard icon={ClipboardList} label="Permintaan Pending" value={stats?.totalPendingItems || 0} accentColor="#d97706" bgColor="#fffbeb" />
+                        </Link>
                     </>
                 ) : (
                     <>

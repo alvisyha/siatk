@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -21,7 +21,9 @@ import {
     FileText,
     Ruler,
     Menu,
-    X
+    X,
+    Bell,
+    ClipboardCheck
 } from 'lucide-react';
 
 interface User {
@@ -73,9 +75,55 @@ export default function DashboardLayout({
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [openMenus, setOpenMenus] = useState<string[]>(['Master Data', 'Transaksi']);
 
+    // Notification state
+    const [pendingCount, setPendingCount] = useState(0);
+    const prevPendingCountRef = useRef(0);
+    const [toast, setToast] = useState<{ message: string; visible: boolean } | null>(null);
+    const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const isFirstFetchRef = useRef(true);
+
+    const showToast = useCallback((message: string) => {
+        if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+        setToast({ message, visible: true });
+        toastTimerRef.current = setTimeout(() => {
+            setToast(prev => prev ? { ...prev, visible: false } : null);
+            setTimeout(() => setToast(null), 300);
+        }, 5000);
+    }, []);
+
+    const fetchPendingCount = useCallback(async () => {
+        try {
+            const res = await fetch('/api/notifications/pending-count');
+            if (res.ok) {
+                const data = await res.json();
+                const newCount = data.count || 0;
+                setPendingCount(newCount);
+
+                // Show toast when count increases (skip first load)
+                if (!isFirstFetchRef.current && newCount > prevPendingCountRef.current && newCount > 0) {
+                    const diff = newCount - prevPendingCountRef.current;
+                    showToast(`${diff} permintaan baru masuk! Total pending: ${newCount}`);
+                }
+                prevPendingCountRef.current = newCount;
+                isFirstFetchRef.current = false;
+            }
+        } catch (e) {
+            console.error('Failed to fetch pending count:', e);
+        }
+    }, [showToast]);
+
     useEffect(() => {
         fetchUser();
     }, []);
+
+    // Start polling after user is loaded (admin only)
+    useEffect(() => {
+        if (user?.role !== 'admin') return;
+
+        fetchPendingCount();
+        const interval = setInterval(fetchPendingCount, 30000); // Poll every 30s
+        return () => clearInterval(interval);
+    }, [user?.role, fetchPendingCount]);
 
     const toggleMenu = (label: string) => {
         setOpenMenus(prev =>
@@ -381,6 +429,65 @@ export default function DashboardLayout({
                             </span>
                         </div>
 
+                        {/* Right side: Notification Bell + User Dropdown */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+
+                        {/* Notification Bell (Admin only) */}
+                        {user?.role === 'admin' && (
+                            <Link
+                                href="/dashboard/permintaan-barang"
+                                style={{
+                                    position: 'relative',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    width: '38px',
+                                    height: '38px',
+                                    borderRadius: '10px',
+                                    border: '1px solid var(--border)',
+                                    background: 'var(--surface)',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s ease',
+                                    textDecoration: 'none',
+                                    flexShrink: 0,
+                                }}
+                                onMouseEnter={e => {
+                                    (e.currentTarget as HTMLElement).style.background = 'var(--bg)';
+                                    (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-strong)';
+                                }}
+                                onMouseLeave={e => {
+                                    (e.currentTarget as HTMLElement).style.background = 'var(--surface)';
+                                    (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)';
+                                }}
+                                title={`${pendingCount} permintaan pending`}
+                            >
+                                <Bell style={{ width: '16px', height: '16px', color: 'var(--text-secondary)' }} />
+                                {pendingCount > 0 && (
+                                    <span style={{
+                                        position: 'absolute',
+                                        top: '-4px',
+                                        right: '-4px',
+                                        minWidth: '18px',
+                                        height: '18px',
+                                        padding: '0 5px',
+                                        borderRadius: '99px',
+                                        background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                                        color: '#fff',
+                                        fontSize: '10px',
+                                        fontWeight: 700,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        lineHeight: 1,
+                                        boxShadow: '0 2px 6px rgba(239,68,68,0.4)',
+                                        animation: 'notifBadgePulse 2s ease-in-out infinite',
+                                    }}>
+                                        {pendingCount > 99 ? '99+' : pendingCount}
+                                    </span>
+                                )}
+                            </Link>
+                        )}
+
                         {/* User Dropdown */}
                         <div style={{ position: 'relative' }}>
                             <button
@@ -482,6 +589,7 @@ export default function DashboardLayout({
                                 </>
                             )}
                         </div>
+                        </div>{/* end right side container */}
                     </div>
                 </header>
 
@@ -490,6 +598,86 @@ export default function DashboardLayout({
                     {children}
                 </main>
             </div>
+
+            {/* Toast Notification */}
+            {toast && (
+                <div
+                    className={toast.visible ? 'animate-slide-in' : ''}
+                    style={{
+                        position: 'fixed',
+                        bottom: '24px',
+                        right: '24px',
+                        zIndex: 99999,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        padding: '14px 20px',
+                        borderRadius: '14px',
+                        background: 'var(--surface)',
+                        border: '1px solid var(--border)',
+                        boxShadow: '0 12px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06)',
+                        maxWidth: '420px',
+                        opacity: toast.visible ? 1 : 0,
+                        transform: toast.visible ? 'translateY(0)' : 'translateY(12px)',
+                        transition: 'opacity 0.3s ease, transform 0.3s ease',
+                    }}
+                >
+                    <div style={{
+                        width: '36px', height: '36px', borderRadius: '10px',
+                        background: '#fffbeb', border: '1px solid #fde68a',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        flexShrink: 0,
+                    }}>
+                        <ClipboardCheck style={{ width: '18px', height: '18px', color: '#d97706' }} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                            Permintaan Baru
+                        </p>
+                        <p style={{ margin: '2px 0 0', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                            {toast.message}
+                        </p>
+                    </div>
+                    <Link
+                        href="/dashboard/permintaan-barang"
+                        onClick={() => { setToast(null); if (toastTimerRef.current) clearTimeout(toastTimerRef.current); }}
+                        style={{
+                            padding: '6px 14px',
+                            borderRadius: '8px',
+                            background: 'var(--primary)',
+                            color: '#fff',
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            textDecoration: 'none',
+                            flexShrink: 0,
+                            transition: 'background 0.15s',
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--primary-hover)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'var(--primary)')}
+                    >
+                        Lihat
+                    </Link>
+                    <button
+                        onClick={() => { setToast(null); if (toastTimerRef.current) clearTimeout(toastTimerRef.current); }}
+                        style={{
+                            background: 'transparent', border: 'none', cursor: 'pointer',
+                            color: 'var(--text-muted)', padding: '2px', display: 'flex',
+                            flexShrink: 0,
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-primary)')}
+                        onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-muted)')}
+                    >
+                        <X style={{ width: '14px', height: '14px' }} />
+                    </button>
+                </div>
+            )}
+
+            <style>{`
+                @keyframes notifBadgePulse {
+                    0%, 100% { transform: scale(1); }
+                    50% { transform: scale(1.1); }
+                }
+            `}</style>
         </div>
     );
 }
